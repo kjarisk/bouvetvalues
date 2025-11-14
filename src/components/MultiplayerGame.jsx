@@ -5,8 +5,9 @@ import {
   updatePlayerScore,
   leaveRoom,
   subscribeToBroadcast,
-  updatePlayerActivity
-} from '../utils/multiplayer';
+  updatePlayerActivity,
+  subscribeToRoom
+} from '../utils/multiplayer-firebase';
 import '../styles/multiplayer-game.css';
 
 function MultiplayerGame({ gameId, GameComponent, room: initialRoom, player, onBack }) {
@@ -16,8 +17,13 @@ function MultiplayerGame({ gameId, GameComponent, room: initialRoom, player, onB
   const scoreUpdateTimeout = useRef(null);
 
   useEffect(() => {
-    // Subscribe to broadcast updates
-    const unsubscribe = subscribeToBroadcast((message) => {
+    // Subscribe to real-time room updates
+    const unsubscribeRoom = subscribeToRoom(room.code, (updatedRoom) => {
+      setRoom(updatedRoom);
+    });
+    
+    // Subscribe to broadcast updates for local sync
+    const unsubscribeBroadcast = subscribeToBroadcast((message) => {
       if (message.data.roomCode === room.code) {
         refreshRoom();
       }
@@ -28,15 +34,10 @@ function MultiplayerGame({ gameId, GameComponent, room: initialRoom, player, onB
       updatePlayerActivity(room.code, player.id);
     }, 5000);
 
-    // Refresh room periodically
-    const refreshInterval = setInterval(() => {
-      refreshRoom();
-    }, 2000);
-
     return () => {
-      unsubscribe();
+      unsubscribeRoom();
+      unsubscribeBroadcast();
       clearInterval(activityInterval);
-      clearInterval(refreshInterval);
     };
   }, [room.code, player.id]);
 
@@ -58,8 +59,8 @@ function MultiplayerGame({ gameId, GameComponent, room: initialRoom, player, onB
     };
   }, [gameScore, room.code, player.id, gameId]);
 
-  const refreshRoom = () => {
-    const updatedRoom = getRoom(room.code);
+  const refreshRoom = async () => {
+    const updatedRoom = await getRoom(room.code);
     if (updatedRoom) {
       setRoom(updatedRoom);
     }

@@ -10,8 +10,9 @@ import {
   getRoomCodeFromUrl,
   createPlayer,
   subscribeToBroadcast,
-  updatePlayerActivity
-} from '../utils/multiplayer';
+  updatePlayerActivity,
+  subscribeToRoom
+} from '../utils/multiplayer-firebase';
 import '../styles/lobby.css';
 
 function MultiplayerLobby({ onStartGame, onBackToSingle }) {
@@ -34,16 +35,20 @@ function MultiplayerLobby({ onStartGame, onBackToSingle }) {
 
   useEffect(() => {
     if (room) {
-      // Set up broadcast listener
-      const unsubscribe = subscribeToBroadcast((message) => {
-        if (message.type === 'PLAYER_JOINED' && message.data.roomCode === room.code) {
+      // Subscribe to real-time room updates (Firebase or polling)
+      const unsubscribeRoom = subscribeToRoom(room.code, (updatedRoom) => {
+        setRoom(updatedRoom);
+        
+        // Check if game started
+        if (updatedRoom.gameState === 'playing' && updatedRoom.currentGame) {
+          onStartGame(updatedRoom.currentGame, updatedRoom, currentPlayer);
+        }
+      });
+
+      // Set up broadcast listener for local tab sync
+      const unsubscribeBroadcast = subscribeToBroadcast((message) => {
+        if (message.data.roomCode === room.code) {
           refreshRoom();
-        } else if (message.type === 'PLAYER_LEFT' && message.data.roomCode === room.code) {
-          refreshRoom();
-        } else if (message.type === 'SCORE_UPDATE' && message.data.roomCode === room.code) {
-          refreshRoom();
-        } else if (message.type === 'GAME_STARTED' && message.data.roomCode === room.code) {
-          onStartGame(message.data.gameId, room, currentPlayer);
         }
       });
 
@@ -52,22 +57,17 @@ function MultiplayerLobby({ onStartGame, onBackToSingle }) {
         updatePlayerActivity(room.code, currentPlayer.id);
       }, 5000);
 
-      // Refresh room data periodically
-      const refreshInterval = setInterval(() => {
-        refreshRoom();
-      }, 2000);
-
       return () => {
-        unsubscribe();
+        unsubscribeRoom();
+        unsubscribeBroadcast();
         clearInterval(activityInterval);
-        clearInterval(refreshInterval);
       };
     }
   }, [room, currentPlayer]);
 
-  const refreshRoom = () => {
+  const refreshRoom = async () => {
     if (room) {
-      const updatedRoom = getRoom(room.code);
+      const updatedRoom = await getRoom(room.code);
       if (updatedRoom) {
         setRoom(updatedRoom);
       } else {
@@ -78,7 +78,7 @@ function MultiplayerLobby({ onStartGame, onBackToSingle }) {
     }
   };
 
-  const handleCreateRoom = () => {
+  const handleCreateRoom = async () => {
     if (!playerName.trim()) {
       setError('Please enter your name');
       return;
@@ -87,12 +87,16 @@ function MultiplayerLobby({ onStartGame, onBackToSingle }) {
     const player = createPlayer(playerName.trim(), selectedAvatar);
     setCurrentPlayer(player);
     
-    const newRoom = createRoom(player);
-    setRoom(newRoom);
-    setStage('lobby');
+    const newRoom = await createRoom(player);
+    if (newRoom) {
+      setRoom(newRoom);
+      setStage('lobby');
+    } else {
+      setError('Failed to create room. Please try again.');
+    }
   };
 
-  const handleJoinRoom = () => {
+  const handleJoinRoom = async () => {
     if (!playerName.trim()) {
       setError('Please enter your name');
       return;
@@ -107,7 +111,7 @@ function MultiplayerLobby({ onStartGame, onBackToSingle }) {
       const player = createPlayer(playerName.trim(), selectedAvatar);
       setCurrentPlayer(player);
       
-      const joinedRoom = joinRoom(roomCode.toUpperCase(), player);
+      const joinedRoom = await joinRoom(roomCode.toUpperCase(), player);
       setRoom(joinedRoom);
       setStage('lobby');
     } catch (err) {
