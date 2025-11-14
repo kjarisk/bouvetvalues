@@ -270,7 +270,7 @@ function JordnaerGame({ onBack, onScoreChange, multiplayerMode = false, currentP
               className="player bubble-head"
               style={{ left: `${playerPos}%` }}
             >
-              <img src="/camilla.png" alt="player" />
+              <img src={`${import.meta.env.BASE_URL}camilla.png`} alt="player" />
             </div>
             {fallingItems.map(item => (
               <div
