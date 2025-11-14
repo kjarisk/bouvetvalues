@@ -1,0 +1,171 @@
+.troverdighet-game {
+  background: linear-gradient(135deg, #C33764 0%, #1D2671 100%);
+}
+
+.statement-container {
+  width: 90%;
+  max-width: 800px;
+  margin: 120px auto 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+.progress-indicator {
+  font-size: 1.2rem;
+  color: var(--accent);
+  font-weight: bold;
+  text-align: center;
+}
+
+.statement-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  padding: 3rem;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  position: relative;
+  animation: slideIn 0.5s ease;
+}
+
+.statement-icon {
+  font-size: 3rem;
+  position: absolute;
+  top: -1.5rem;
+  background: var(--dark);
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 4px solid white;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  filter: blur(10px);
+  opacity: 0.3;
+}
+
+.statement-text {
+  font-size: 1.5rem;
+  color: var(--dark);
+  line-height: 1.8;
+  text-align: center;
+  font-weight: 500;
+  margin: 0;
+  font-style: italic;
+}
+
+.choice-buttons {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.choice-btn {
+  padding: 1.5rem 3rem;
+  font-size: 1.3rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.choice-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.choice-btn:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.choice-btn:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+}
+
+.choice-btn:active {
+  transform: translateY(-2px);
+}
+
+.credible-btn {
+  background: linear-gradient(135deg, #2ECC71, #27AE60);
+  color: white;
+}
+
+.bullshit-btn {
+  background: linear-gradient(135deg, #E74C3C, #C0392B);
+  color: white;
+}
+
+.feedback-banner {
+  font-size: 3rem;
+  font-weight: bold;
+  padding: 1rem 3rem;
+  border-radius: 15px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  text-align: center;
+  animation: feedbackPulse 0.5s ease;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes feedbackPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+@media (max-width: 768px) {
+  .statement-text {
+    font-size: 1.2rem;
+  }
+  
+  .choice-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .choice-btn {
+    width: 100%;
+    padding: 1.2rem 2rem;
+    font-size: 1.1rem;
+  }
+}
+

@@ -1,0 +1,158 @@
+.frihet-game {
+  background: linear-gradient(135deg, #FFA500 0%, #FFD700 50%, #FFF44F 100%);
+}
+
+.block-palette {
+  position: absolute;
+  left: 20px;
+  top: 100px;
+  width: 200px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 15px;
+  padding: 1rem;
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.block-palette h3 {
+  color: var(--accent);
+  margin: 0 0 1rem 0;
+  text-align: center;
+  font-size: 1.2rem;
+}
+
+.palette-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.palette-block {
+  padding: 0.8rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.palette-block:hover {
+  transform: translateX(5px);
+  border-color: white;
+}
+
+.palette-block.selected {
+  border-color: var(--accent);
+  border-width: 3px;
+  box-shadow: 0 0 15px var(--accent);
+}
+
+.palette-icon {
+  font-size: 1.5rem;
+}
+
+.palette-label {
+  color: white;
+  font-weight: bold;
+  font-size: 0.85rem;
+}
+
+.palette-hint {
+  margin-top: 1rem;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  text-align: center;
+  color: var(--accent);
+  font-size: 0.9rem;
+}
+
+.canvas-container {
+  position: absolute;
+  left: 250px;
+  right: 20px;
+  top: 100px;
+  bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.build-canvas {
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  border: 4px solid rgba(0, 0, 0, 0.2);
+  position: relative;
+  cursor: crosshair;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.placed-block {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  animation: placeBlock 0.3s ease;
+}
+
+.placed-block:hover {
+  transform: translate(-50%, -50%) scale(1.1) !important;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+}
+
+.canvas-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.5rem;
+  color: rgba(0, 0, 0, 0.3);
+  text-align: center;
+  pointer-events: none;
+}
+
+@keyframes placeBlock {
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 900px) {
+  .block-palette {
+    left: 10px;
+    width: 150px;
+    padding: 0.5rem;
+  }
+  
+  .canvas-container {
+    left: 180px;
+    right: 10px;
+  }
+  
+  .palette-label {
+    display: none;
+  }
+}
+

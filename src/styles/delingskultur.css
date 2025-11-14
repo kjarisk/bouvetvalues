@@ -1,0 +1,178 @@
+.delingskultur-game {
+  background: linear-gradient(135deg, #2193B0 0%, #6DD5ED 100%);
+}
+
+.puzzle-container {
+  width: 90%;
+  max-width: 1200px;
+  height: 80%;
+  margin: 100px auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 2rem;
+}
+
+.blocks-area, .slots-area {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 2rem;
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.blocks-area h3, .slots-area h3 {
+  text-align: center;
+  color: var(--accent);
+  margin: 0 0 1.5rem 0;
+  font-size: 1.5rem;
+}
+
+.blocks-grid, .slots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 1rem;
+}
+
+.knowledge-block {
+  padding: 1.5rem 1rem;
+  border-radius: 15px;
+  text-align: center;
+  border: 3px solid rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+  cursor: grab;
+  user-select: none;
+}
+
+.knowledge-block:active {
+  cursor: grabbing;
+}
+
+.knowledge-block:not(.placed):hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+.knowledge-block.selected {
+  border-color: var(--accent);
+  border-width: 4px;
+  box-shadow: 0 0 20px var(--accent);
+  animation: pulse 0.5s ease-in-out infinite;
+}
+
+.knowledge-block.placed {
+  cursor: default;
+  filter: grayscale(0.8);
+}
+
+.block-icon {
+  display: block;
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.block-label {
+  display: block;
+  font-weight: bold;
+  color: white;
+  font-size: 0.9rem;
+}
+
+.knowledge-slot {
+  padding: 1.5rem 1rem;
+  border-radius: 15px;
+  text-align: center;
+  border: 3px dashed rgba(255, 255, 255, 0.5);
+  background: rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  min-height: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.knowledge-slot:not(.filled):hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent);
+}
+
+.knowledge-slot.filled {
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 0.8);
+  animation: fillSuccess 0.5s ease;
+  cursor: default;
+}
+
+.slot-placeholder {
+  font-size: 3rem;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.sharing-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.arrow {
+  font-size: 4rem;
+  color: var(--accent);
+  animation: slideRight 1s ease-in-out infinite;
+}
+
+.share-text {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--accent);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  letter-spacing: 0.2rem;
+}
+
+@keyframes slideRight {
+  0%, 100% {
+    transform: translateX(-10px);
+  }
+  50% {
+    transform: translateX(10px);
+  }
+}
+
+@keyframes fillSuccess {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 900px) {
+  .puzzle-container {
+    flex-direction: column;
+    height: auto;
+    padding: 1rem;
+  }
+  
+  .sharing-arrow {
+    flex-direction: row;
+  }
+  
+  .arrow {
+    transform: rotate(90deg);
+  }
+  
+  .share-text {
+    writing-mode: horizontal-tb;
+  }
+}
+

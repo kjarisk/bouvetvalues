@@ -1,0 +1,227 @@
+.lobby-container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.lobby-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  padding: 3rem;
+  max-width: 700px;
+  width: 100%;
+  backdrop-filter: blur(20px);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  animation: fadeInUp 0.5s ease;
+}
+
+.lobby-card h1 {
+  text-align: center;
+  color: var(--accent);
+  margin: 0 0 2rem 0;
+  font-size: 2.5rem;
+}
+
+.setup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.name-input,
+.room-code-input {
+  padding: 1rem;
+  font-size: 1.2rem;
+  border: 2px solid var(--secondary);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--light);
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.name-input:focus,
+.room-code-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 20px rgba(255, 230, 109, 0.3);
+}
+
+.lobby-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.btn-large {
+  padding: 1.2rem 2rem;
+  font-size: 1.2rem;
+}
+
+.btn-small {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+.join-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-top: 1rem;
+}
+
+.divider {
+  text-align: center;
+  color: var(--light);
+  opacity: 0.6;
+  position: relative;
+  margin: 1rem 0;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.divider::before {
+  left: 0;
+}
+
+.divider::after {
+  right: 0;
+}
+
+.error-message {
+  background: rgba(231, 76, 60, 0.2);
+  border: 2px solid var(--warning);
+  color: var(--warning);
+  padding: 0.8rem;
+  border-radius: 10px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.room-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1rem 1.5rem;
+  border-radius: 15px;
+  margin-bottom: 1.5rem;
+  border: 2px solid var(--accent);
+}
+
+.room-code-display {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.room-code-display .label {
+  color: var(--light);
+  opacity: 0.8;
+  font-size: 1rem;
+}
+
+.room-code-display .code {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--accent);
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.2rem;
+}
+
+.lobby-info {
+  text-align: center;
+  margin: 1.5rem 0;
+  color: var(--light);
+  opacity: 0.9;
+}
+
+.lobby-info p {
+  margin: 0.5rem 0;
+}
+
+.host-info {
+  color: var(--accent);
+  font-weight: bold;
+  margin-top: 1rem;
+}
+
+.game-selection {
+  margin: 2rem 0;
+}
+
+.game-selection h3 {
+  color: var(--accent);
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.game-grid-small {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.game-btn {
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid var(--secondary);
+  border-radius: 10px;
+  color: var(--light);
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.game-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: var(--accent);
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.player-name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .lobby-card {
+    padding: 1.5rem;
+  }
+
+  .lobby-card h1 {
+    font-size: 2rem;
+  }
+
+  .room-code-display {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .room-info {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .game-grid-small {
+    grid-template-columns: 1fr;
+  }
+}
+

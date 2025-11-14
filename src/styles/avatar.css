@@ -1,0 +1,128 @@
+.avatar-selector {
+  margin: 2rem 0;
+}
+
+.avatar-selector h3 {
+  color: var(--accent);
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 0.5rem;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.avatar-option {
+  font-size: 2rem;
+  padding: 0.5rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+}
+
+.avatar-option:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.avatar-option.selected {
+  background: var(--accent);
+  border-color: white;
+  transform: scale(1.15);
+  box-shadow: 0 0 20px var(--accent);
+}
+
+.player-avatar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.player-avatar-icon {
+  font-size: 1.5rem;
+}
+
+.player-list {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 15px;
+  padding: 1rem;
+  margin: 1rem 0;
+  backdrop-filter: blur(10px);
+}
+
+.player-list h3 {
+  color: var(--accent);
+  margin: 0 0 1rem 0;
+  font-size: 1.2rem;
+}
+
+.player-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  margin: 0.5rem 0;
+  transition: all 0.3s ease;
+}
+
+.player-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.player-item.host {
+  border: 2px solid var(--accent);
+}
+
+.player-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.player-score {
+  font-weight: bold;
+  color: var(--secondary);
+  font-size: 1.1rem;
+  min-width: 80px;
+  text-align: right;
+}
+
+.player-status {
+  font-size: 0.8rem;
+  color: var(--accent);
+  font-style: italic;
+}
+
+.host-badge {
+  background: var(--accent);
+  color: var(--dark);
+  padding: 0.2rem 0.5rem;
+  border-radius: 5px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+@media (max-width: 600px) {
+  .avatar-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+  
+  .avatar-option {
+    font-size: 1.5rem;
+  }
+}
+
