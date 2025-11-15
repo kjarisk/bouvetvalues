@@ -16,7 +16,10 @@ function JordnaerGame({ onBack, onScoreChange, multiplayerMode = false, currentP
   const [hitEffects, setHitEffects] = useState([]); // Visual effects when collecting items
   const [collectEffects, setCollectEffects] = useState([]); // Score popup effects
   const animationRef = useRef(null);
+  const gameLoopRef = useRef(null);
   const keysPressed = useRef({});
+  const lastSpawnTime = useRef(0);
+  const lastUpdateTime = useRef(0);
 
   // Update multiplayer score
   useEffect(() => {
@@ -46,39 +49,55 @@ function JordnaerGame({ onBack, onScoreChange, multiplayerMode = false, currentP
 
   useEffect(() => {
     if (gameState === 'playing') {
-      const gameLoop = setInterval(() => {
-        // Spawn new items
-        if (Math.random() < 0.15) {
-          const isBuzzword = Math.random() < 0.6;
-          const items = isBuzzword ? buzzwords : goodItems;
-          const newItem = {
-            id: Date.now() + Math.random(),
-            text: items[Math.floor(Math.random() * items.length)],
-            x: Math.random() * 85 + 5,
-            y: -10,
-            isBuzzword,
-            speed: (1 + Math.random() * 1.5) * 0.9  // 10% slower
-          };
-          setFallingItems(prev => [...prev, newItem]);
+      lastUpdateTime.current = performance.now();
+      
+      const gameLoop = (timestamp) => {
+        const deltaTime = timestamp - lastUpdateTime.current;
+        lastUpdateTime.current = timestamp;
+        
+        // Only update every ~33ms (30fps for game logic, smoother than before)
+        if (deltaTime < 33) {
+          gameLoopRef.current = requestAnimationFrame(gameLoop);
+          return;
         }
 
-        // Update items positions
         setFallingItems(prev => {
-          return prev
-            .map(item => ({ ...item, y: item.y + item.speed }))
-            .filter(item => item.y < 110);
-        });
+          let newItems = [...prev];
+          
+          // Spawn new items (throttled)
+          if (timestamp - lastSpawnTime.current > 300) { // Spawn check every 300ms
+            if (Math.random() < 0.4) { // Adjusted probability for 300ms interval
+              lastSpawnTime.current = timestamp;
+              const isBuzzword = Math.random() < 0.6;
+              const items = isBuzzword ? buzzwords : goodItems;
+              const newItem = {
+                id: timestamp + Math.random(),
+                text: items[Math.floor(Math.random() * items.length)],
+                x: Math.random() * 85 + 5,
+                y: -10,
+                isBuzzword,
+                speed: (1 + Math.random() * 1.5) * 0.9  // 10% slower
+              };
+              newItems.push(newItem);
+            }
+          }
 
-        // Check collisions (bigger hitbox for bubble head)
-        setFallingItems(prev => {
-          const remaining = prev.filter(item => {
-            const itemBottom = item.y;
-            if (itemBottom > 85 && itemBottom < 95) { // Bigger vertical window
+          // Update positions and check collisions in one pass
+          const updatedItems = [];
+          
+          for (const item of newItems) {
+            const newY = item.y + item.speed;
+            
+            // Remove if off screen
+            if (newY > 110) continue;
+            
+            // Check collision
+            const itemBottom = newY;
+            if (itemBottom > 85 && itemBottom < 95) {
               const itemCenter = item.x + 5;
-              // Bigger hitbox for the bubble head
               if (Math.abs(itemCenter - playerPos) < 7) {
-                // Create hit effect (explosion at collision point)
-                const hitEffectId = Date.now() + Math.random();
+                // Hit! Create effects
+                const hitEffectId = timestamp + Math.random();
                 const hitEffect = {
                   id: hitEffectId,
                   x: item.x,
@@ -90,8 +109,7 @@ function JordnaerGame({ onBack, onScoreChange, multiplayerMode = false, currentP
                   setHitEffects(effects => effects.filter(e => e.id !== hitEffectId));
                 }, 800);
                 
-                // Create collect effect (score popup at player)
-                const collectEffectId = Date.now() + Math.random() + 0.1;
+                const collectEffectId = timestamp + Math.random() + 0.1;
                 const collectEffect = {
                   id: collectEffectId,
                   x: playerPos,
@@ -103,61 +121,91 @@ function JordnaerGame({ onBack, onScoreChange, multiplayerMode = false, currentP
                   setCollectEffects(effects => effects.filter(e => e.id !== collectEffectId));
                 }, 1000);
                 
+                // Update score and streaks
                 if (item.isBuzzword) {
                   setScore(s => Math.max(0, s - 10));
-                  setBuzzwordHits(h => h + 1);
+                  setBuzzwordHits(h => {
+                    const newHits = h + 1;
+                    if (newHits >= 5) {
+                      setTimeout(() => setGameState('gameOver'), 100);
+                    }
+                    return newHits;
+                  });
                   setGoodStreak(0);
-                  
-                  // Check for game over (5 buzzwords)
-                  if (buzzwordHits >= 4) {
-                    setTimeout(() => setGameState('gameOver'), 100);
-                  }
                 } else {
                   setScore(s => s + 20);
-                  const newStreak = goodStreak + 1;
-                  setGoodStreak(newStreak);
-                  
-                  // Show streak popup at 5 in a row
-                  if (newStreak === 5) {
-                    const msg = streakMessages[Math.floor(Math.random() * streakMessages.length)];
-                    setStreakPopup(msg);
-                    setTimeout(() => setStreakPopup(''), 2000);
-                    setScore(s => s + 50); // Bonus!
-                  }
+                  setGoodStreak(streak => {
+                    const newStreak = streak + 1;
+                    if (newStreak === 5) {
+                      const msg = streakMessages[Math.floor(Math.random() * streakMessages.length)];
+                      setStreakPopup(msg);
+                      setTimeout(() => setStreakPopup(''), 2000);
+                      setScore(s => s + 50);
+                    }
+                    return newStreak;
+                  });
                 }
-                return false;
+                
+                // Don't keep this item
+                continue;
               }
             }
-            return true;
-          });
-          return remaining;
+            
+            // Keep item with updated position
+            updatedItems.push({ ...item, y: newY });
+          }
+          
+          return updatedItems;
         });
-      }, 50);
 
-      return () => clearInterval(gameLoop);
+        gameLoopRef.current = requestAnimationFrame(gameLoop);
+      };
+
+      gameLoopRef.current = requestAnimationFrame(gameLoop);
+
+      return () => {
+        if (gameLoopRef.current) {
+          cancelAnimationFrame(gameLoopRef.current);
+        }
+      };
     }
-  }, [gameState, playerPos]);
+  }, [gameState, playerPos, buzzwordHits, goodStreak]);
 
   useEffect(() => {
     if (gameState === 'playing') {
       const handleKeyDown = (e) => {
-        keysPressed.current[e.key] = true;
+        if (['ArrowLeft', 'ArrowRight', 'a', 'd'].includes(e.key)) {
+          e.preventDefault();
+          keysPressed.current[e.key] = true;
+        }
       };
       const handleKeyUp = (e) => {
         keysPressed.current[e.key] = false;
       };
 
-      const movePlayer = () => {
-        setPlayerPos(pos => {
-          let newPos = pos;
-          if (keysPressed.current['ArrowLeft'] || keysPressed.current['a']) {
-            newPos = Math.max(5, pos - 1); // Slower movement (was -2)
-          }
-          if (keysPressed.current['ArrowRight'] || keysPressed.current['d']) {
-            newPos = Math.min(95, pos + 1); // Slower movement (was +2)
-          }
-          return newPos;
-        });
+      let lastMoveTime = performance.now();
+      
+      const movePlayer = (timestamp) => {
+        const deltaTime = timestamp - lastMoveTime;
+        
+        // Throttle to ~60fps for smooth movement
+        if (deltaTime > 16) {
+          lastMoveTime = timestamp;
+          
+          setPlayerPos(pos => {
+            let newPos = pos;
+            const moveSpeed = 1.5; // Slightly faster but smooth
+            
+            if (keysPressed.current['ArrowLeft'] || keysPressed.current['a']) {
+              newPos = Math.max(5, pos - moveSpeed);
+            }
+            if (keysPressed.current['ArrowRight'] || keysPressed.current['d']) {
+              newPos = Math.min(95, pos + moveSpeed);
+            }
+            return newPos;
+          });
+        }
+        
         animationRef.current = requestAnimationFrame(movePlayer);
       };
 
@@ -421,4 +469,5 @@ function JordnaerGame({ onBack, onScoreChange, multiplayerMode = false, currentP
 }
 
 export default JordnaerGame;
+
 

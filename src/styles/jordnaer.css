@@ -92,9 +92,10 @@
   position: absolute;
   bottom: 10%;
   transform: translateX(-50%);
-  transition: left 0.1s ease-out; /* Smoother transition */
+  /* Removed transition for instant, smooth movement with requestAnimationFrame */
   z-index: 10;
   animation: floatPlayer 2s ease-in-out infinite;
+  will-change: left; /* Performance optimization hint for browser */
 }
 
 /* Bubble head styling */
@@ -152,7 +153,8 @@
   pointer-events: none;
   animation: gentleWobble 1s ease-in-out infinite;
   z-index: 5;
-  transition: all 0.2s ease;
+  will-change: top, left; /* Performance optimization */
+  /* Removed transition for smoother requestAnimationFrame updates */
   color: #2D3561;
   border: 2px solid rgba(255, 255, 255, 0.8);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
