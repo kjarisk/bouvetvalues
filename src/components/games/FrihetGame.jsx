@@ -6,10 +6,12 @@ function FrihetGame({ onBack, onScoreChange, multiplayerMode = false, currentPla
   const [gameState, setGameState] = useState('ready');
   const [score, setScore] = useState(0);
   const [playerName, setPlayerName] = useState('');
-  const [selectedBlock, setSelectedBlock] = useState(null);
-  const [placedBlocks, setPlacedBlocks] = useState([]);
-  const [timeLeft, setTimeLeft] = useState(90);
-  const canvasRef = useRef(null);
+  const [currentRound, setCurrentRound] = useState(0);
+  const [selectedColor, setSelectedColor] = useState('red');
+  const [selectedShape, setSelectedShape] = useState('square');
+  const [canvas, setCanvas] = useState([]);
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [roundComplete, setRoundComplete] = useState(false);
 
   useEffect(() => {
     if (multiplayerMode && onScoreChange) {
@@ -17,26 +19,75 @@ function FrihetGame({ onBack, onScoreChange, multiplayerMode = false, currentPla
     }
   }, [score, multiplayerMode, onScoreChange]);
 
-  const blockTypes = [
-    { type: 'red', color: '#E74C3C', icon: '🟥', label: 'Red Block' },
-    { type: 'blue', color: '#3498DB', icon: '🟦', label: 'Blue Block' },
-    { type: 'green', color: '#2ECC71', icon: '🟩', label: 'Green Block' },
-    { type: 'yellow', color: '#F1C40F', icon: '🟨', label: 'Yellow Block' },
-    { type: 'purple', color: '#9B59B6', icon: '🟪', label: 'Purple Block' },
-    { type: 'orange', color: '#E67E22', icon: '🟧', label: 'Orange Block' }
+  // Creative challenges with goals
+  const challenges = [
+    {
+      title: '🏠 Build a House',
+      description: 'Create a house using blocks!',
+      hints: ['Start with a base', 'Add walls', 'Don\'t forget the roof!'],
+      minBlocks: 8,
+      timeLimit: 30,
+      basePoints: 100
+    },
+    {
+      title: '🚗 Design a Car',
+      description: 'Build a creative vehicle!',
+      hints: ['Add wheels', 'Create the body', 'Windows?'],
+      minBlocks: 6,
+      timeLimit: 25,
+      basePoints: 150
+    },
+    {
+      title: '😊 Make a Smiley Face',
+      description: 'Express happiness with blocks!',
+      hints: ['Eyes first', 'Add a smile', 'Be creative!'],
+      minBlocks: 5,
+      timeLimit: 20,
+      basePoints: 200
+    },
+    {
+      title: '🌳 Grow a Tree',
+      description: 'Plant a colorful tree!',
+      hints: ['Brown trunk', 'Green leaves', 'Maybe some fruits?'],
+      minBlocks: 7,
+      timeLimit: 25,
+      basePoints: 250
+    },
+    {
+      title: '🎨 Abstract Art',
+      description: 'Create something unique and colorful!',
+      hints: ['Use all colors', 'Be bold!', 'Freedom!'],
+      minBlocks: 12,
+      timeLimit: 35,
+      basePoints: 300
+    }
   ];
 
-  const creationLabels = [
-    'A Masterpiece!', 'Innovative!', 'Creative Genius!', 'Outside the Box!',
-    'Revolutionary!', 'Bold Vision!', 'Inspiring!', 'Brilliant!'
+  const colors = [
+    { name: 'red', color: '#E74C3C', label: 'Red' },
+    { name: 'blue', color: '#3498DB', label: 'Blue' },
+    { name: 'green', color: '#2ECC71', label: 'Green' },
+    { name: 'yellow', color: '#F1C40F', label: 'Yellow' },
+    { name: 'purple', color: '#9B59B6', label: 'Purple' },
+    { name: 'orange', color: '#E67E22', label: 'Orange' },
+    { name: 'brown', color: '#795548', label: 'Brown' },
+    { name: 'pink', color: '#E91E63', label: 'Pink' }
   ];
 
+  const shapes = [
+    { name: 'square', icon: '■', size: 40 },
+    { name: 'circle', icon: '●', size: 40 },
+    { name: 'triangle', icon: '▲', size: 40 },
+    { name: 'rectangle', icon: '▬', size: 40 }
+  ];
+
+  // Timer
   useEffect(() => {
-    if (gameState === 'playing' && timeLeft > 0) {
+    if (gameState === 'playing' && timeLeft > 0 && !roundComplete) {
       const timer = setInterval(() => {
         setTimeLeft(t => {
           if (t <= 1) {
-            finishBuilding();
+            completeRound();
             return 0;
           }
           return t - 1;
@@ -44,47 +95,90 @@ function FrihetGame({ onBack, onScoreChange, multiplayerMode = false, currentPla
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, [gameState, timeLeft]);
-
-  const handleCanvasClick = (e) => {
-    if (!selectedBlock || gameState !== 'playing') return;
-
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-
-    const newBlock = {
-      id: Date.now(),
-      ...selectedBlock,
-      x,
-      y,
-      rotation: Math.floor(Math.random() * 4) * 90
-    };
-
-    setPlacedBlocks(prev => [...prev, newBlock]);
-    setScore(s => s + 10);
-  };
-
-  const removeBlock = (blockId) => {
-    setPlacedBlocks(prev => prev.filter(b => b.id !== blockId));
-    setScore(s => Math.max(0, s - 5));
-  };
-
-  const finishBuilding = () => {
-    // Calculate bonus based on creativity
-    const uniqueColors = new Set(placedBlocks.map(b => b.type)).size;
-    const creativityBonus = uniqueColors * 50 + placedBlocks.length * 5;
-    setScore(s => s + creativityBonus);
-    setGameState('finished');
-  };
+  }, [gameState, timeLeft, roundComplete]);
 
   const startGame = () => {
     setGameState('playing');
     setScore(0);
-    setPlacedBlocks([]);
-    setSelectedBlock(blockTypes[0]);
-    setTimeLeft(90);
+    setCurrentRound(0);
+    setCanvas([]);
+    setTimeLeft(challenges[0].timeLimit);
+    setRoundComplete(false);
+    setSelectedColor('red');
+    setSelectedShape('square');
+  };
+
+  const handleCanvasClick = (e) => {
+    if (gameState !== 'playing' || roundComplete) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    const newBlock = {
+      id: Date.now() + Math.random(),
+      x: Math.max(2, Math.min(98, x)),
+      y: Math.max(2, Math.min(98, y)),
+      color: colors.find(c => c.name === selectedColor).color,
+      colorName: selectedColor,
+      shape: selectedShape,
+      size: shapes.find(s => s.name === selectedShape).size
+    };
+
+    setCanvas(prev => [...prev, newBlock]);
+  };
+
+  const removeLastBlock = () => {
+    if (canvas.length > 0) {
+      setCanvas(prev => prev.slice(0, -1));
+    }
+  };
+
+  const clearCanvas = () => {
+    setCanvas([]);
+  };
+
+  const completeRound = () => {
+    setRoundComplete(true);
+    
+    const challenge = challenges[currentRound];
+    const blocksPlaced = canvas.length;
+    const uniqueColors = new Set(canvas.map(b => b.colorName)).size;
+    const uniqueShapes = new Set(canvas.map(b => b.shape)).size;
+    
+    // Calculate score
+    let roundScore = 0;
+    
+    // Base points if minimum blocks met
+    if (blocksPlaced >= challenge.minBlocks) {
+      roundScore += challenge.basePoints;
+    } else {
+      roundScore += (blocksPlaced / challenge.minBlocks) * challenge.basePoints * 0.5;
+    }
+    
+    // Bonus for creativity
+    const creativityBonus = (uniqueColors * 20) + (uniqueShapes * 15) + (blocksPlaced * 5);
+    roundScore += creativityBonus;
+    
+    // Time bonus
+    const timeBonus = timeLeft * 3;
+    roundScore += timeBonus;
+    
+    setScore(s => s + Math.floor(roundScore));
+    
+    // Show round complete screen for 2 seconds
+    setTimeout(() => {
+      if (currentRound < challenges.length - 1) {
+        // Next round
+        setCurrentRound(r => r + 1);
+        setCanvas([]);
+        setTimeLeft(challenges[currentRound + 1].timeLimit);
+        setRoundComplete(false);
+      } else {
+        // Game over
+        setGameState('gameOver');
+      }
+    }, 2500);
   };
 
   const saveScore = () => {
@@ -96,20 +190,17 @@ function FrihetGame({ onBack, onScoreChange, multiplayerMode = false, currentPla
     }
   };
 
+  const challenge = challenges[currentRound];
+
   return (
     <div className="game-container frihet-game">
       <div className="game-header">
         <div className="game-score">
-          Score: {score} | Blocks: {placedBlocks.length} | Time: {timeLeft}s
+          🎨 Score: {score} | 🏆 Round: {currentRound + 1}/{challenges.length} | ⏱️ {timeLeft}s
         </div>
         <div className="game-controls">
-          {gameState === 'playing' && (
-            <button className="btn btn-primary" onClick={finishBuilding}>
-              Finish Building
-            </button>
-          )}
           <button className="btn btn-secondary" onClick={onBack}>
-            Back to Home
+            {multiplayerMode ? 'Back to Lobby' : 'Back to Games'}
           </button>
         </div>
       </div>
@@ -117,83 +208,155 @@ function FrihetGame({ onBack, onScoreChange, multiplayerMode = false, currentPla
       <div className="game-area">
         {gameState === 'ready' && (
           <div className="game-over-modal">
-            <h2>Frihet 🎨</h2>
-            <p style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>
-              Build freely without limits!
+            <h2>🎨 Frihet - Creative Freedom!</h2>
+            <p style={{ fontSize: '1.3rem', marginBottom: '1rem', color: 'var(--accent)' }}>
+              Express Your Creativity!
             </p>
-            <p>Select blocks and click to place them</p>
-            <p>Create whatever you imagine!</p>
-            <p>More blocks = Higher score!</p>
-            <button className="btn btn-primary" onClick={startGame}>
-              Start Building
+            <div style={{ textAlign: 'left', margin: '1.5rem 0', maxWidth: '500px' }}>
+              <p>🎯 <strong>{challenges.length} Creative Challenges</strong> await!</p>
+              <p>🖌️ <strong>Build freely</strong> using colors and shapes</p>
+              <p>⭐ <strong>Complete goals</strong> to earn points</p>
+              <p>🚀 <strong>Creativity bonus</strong> for unique designs!</p>
+              <p>⏱️ <strong>Time pressure</strong> - work fast!</p>
+            </div>
+            <button className="btn btn-primary btn-large" onClick={startGame}>
+              🎨 Start Creating!
             </button>
           </div>
         )}
 
         {gameState === 'playing' && (
-          <>
-            <div className="block-palette">
-              <h3>Block Palette</h3>
-              <div className="palette-grid">
-                {blockTypes.map(block => (
-                  <div
-                    key={block.type}
-                    className={`palette-block ${selectedBlock?.type === block.type ? 'selected' : ''}`}
-                    style={{ background: block.color }}
-                    onClick={() => setSelectedBlock(block)}
-                  >
-                    <span className="palette-icon">{block.icon}</span>
-                    <span className="palette-label">{block.label}</span>
+          <div className="creative-game-layout">
+            {/* Challenge Info */}
+            <div className="challenge-panel">
+              <div className="challenge-info">
+                <h2>{challenge.title}</h2>
+                <p className="challenge-description">{challenge.description}</p>
+                <div className="challenge-hints">
+                  <h4>💡 Hints:</h4>
+                  {challenge.hints.map((hint, i) => (
+                    <div key={i} className="hint-item">• {hint}</div>
+                  ))}
+                </div>
+                <div className="challenge-goals">
+                  <div className="goal-item">
+                    📦 Min Blocks: {challenge.minBlocks}
                   </div>
-                ))}
+                  <div className="goal-item">
+                    📊 Placed: {canvas.length}
+                  </div>
+                </div>
               </div>
-              <div className="palette-hint">
-                Selected: {selectedBlock?.label || 'None'}
+
+              {/* Color Palette */}
+              <div className="color-palette">
+                <h3>🎨 Colors</h3>
+                <div className="color-grid">
+                  {colors.map(color => (
+                    <button
+                      key={color.name}
+                      className={`color-btn ${selectedColor === color.name ? 'selected' : ''}`}
+                      style={{ background: color.color }}
+                      onClick={() => setSelectedColor(color.name)}
+                      title={color.label}
+                    >
+                      {selectedColor === color.name && '✓'}
+                    </button>
+                  ))}
+                </div>
               </div>
+
+              {/* Shape Selector */}
+              <div className="shape-selector">
+                <h3>📐 Shapes</h3>
+                <div className="shape-grid">
+                  {shapes.map(shape => (
+                    <button
+                      key={shape.name}
+                      className={`shape-btn ${selectedShape === shape.name ? 'selected' : ''}`}
+                      onClick={() => setSelectedShape(shape.name)}
+                    >
+                      <span style={{ fontSize: '2rem' }}>{shape.icon}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tools */}
+              <div className="tools">
+                <button className="btn btn-warning" onClick={removeLastBlock} disabled={canvas.length === 0}>
+                  ↶ Undo
+                </button>
+                <button className="btn btn-danger" onClick={clearCanvas} disabled={canvas.length === 0}>
+                  🗑️ Clear
+                </button>
+              </div>
+
+              <button 
+                className="btn btn-success btn-large" 
+                onClick={completeRound}
+                disabled={canvas.length < challenge.minBlocks}
+                style={{ marginTop: '1rem' }}
+              >
+                {canvas.length >= challenge.minBlocks ? '✓ Done!' : `Need ${challenge.minBlocks - canvas.length} more blocks`}
+              </button>
             </div>
 
-            <div className="canvas-container">
-              <div
-                ref={canvasRef}
-                className="build-canvas"
+            {/* Canvas */}
+            <div className="canvas-panel">
+              <div className="canvas-header">
+                <h3>Your Creation</h3>
+                <p>Click anywhere to place blocks!</p>
+              </div>
+              <div 
+                className="creative-canvas"
                 onClick={handleCanvasClick}
               >
-                {placedBlocks.map(block => (
+                {canvas.map(block => (
                   <div
                     key={block.id}
-                    className="placed-block"
+                    className={`canvas-block shape-${block.shape}`}
                     style={{
                       left: `${block.x}%`,
                       top: `${block.y}%`,
                       background: block.color,
-                      transform: `translate(-50%, -50%) rotate(${block.rotation}deg)`
+                      width: `${block.size}px`,
+                      height: `${block.size}px`
                     }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeBlock(block.id);
-                    }}
-                  >
-                    {block.icon}
-                  </div>
+                  />
                 ))}
-                {placedBlocks.length === 0 && (
-                  <div className="canvas-hint">
-                    Click anywhere to place blocks!
+                {canvas.length === 0 && (
+                  <div className="canvas-placeholder">
+                    Click to start building!
                   </div>
                 )}
               </div>
+
+              {roundComplete && (
+                <div className="round-complete-overlay">
+                  <div className="round-complete-card">
+                    <h2>✨ Round Complete!</h2>
+                    <p style={{ fontSize: '1.2rem', color: 'var(--accent)' }}>
+                      Great creativity! 🎨
+                    </p>
+                    <p>Blocks: {canvas.length} | Colors: {new Set(canvas.map(b => b.colorName)).size}</p>
+                  </div>
+                </div>
+              )}
             </div>
-          </>
+          </div>
         )}
 
-        {gameState === 'finished' && (
+        {gameState === 'gameOver' && (
           <div className="game-over-modal">
-            <h2>{creationLabels[Math.floor(Math.random() * creationLabels.length)]}</h2>
-            <div className="final-score">Score: {score}</div>
-            <div className="final-score" style={{ fontSize: '1.2rem', color: 'var(--accent)' }}>
-              Blocks Placed: {placedBlocks.length}
-            </div>
-            <p>You've created something unique!</p>
+            <h2>🎉 Creative Session Complete!</h2>
+            <div className="final-score">Final Score: {score}</div>
+            <p style={{ color: 'var(--accent)', fontSize: '1.2rem', margin: '1rem 0' }}>
+              You completed all {challenges.length} challenges!
+            </p>
+            <p style={{ fontSize: '1rem', opacity: 0.9 }}>
+              Your creativity knows no bounds! 🚀
+            </p>
             {!multiplayerMode && (
               <input
                 type="text"
@@ -202,13 +365,14 @@ function FrihetGame({ onBack, onScoreChange, multiplayerMode = false, currentPla
                 onChange={(e) => setPlayerName(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && saveScore()}
                 autoFocus
+                className="name-input"
               />
             )}
-            <div>
+            <div className="game-over-actions">
               {multiplayerMode ? (
                 <>
                   <button className="btn btn-primary" onClick={startGame}>
-                    Build Again
+                    Play Again
                   </button>
                   <button className="btn btn-secondary" onClick={onBack}>
                     Back to Lobby
@@ -216,11 +380,11 @@ function FrihetGame({ onBack, onScoreChange, multiplayerMode = false, currentPla
                 </>
               ) : (
                 <>
-                  <button className="btn btn-primary" onClick={saveScore}>
+                  <button className="btn btn-primary" onClick={saveScore} disabled={!playerName.trim()}>
                     Save Score
                   </button>
                   <button className="btn btn-secondary" onClick={startGame}>
-                    Build Again
+                    Play Again
                   </button>
                 </>
               )}
@@ -233,4 +397,3 @@ function FrihetGame({ onBack, onScoreChange, multiplayerMode = false, currentPla
 }
 
 export default FrihetGame;
-
