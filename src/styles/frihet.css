@@ -236,8 +236,7 @@
   height: 0 !important;
   border-left: 20px solid transparent;
   border-right: 20px solid transparent;
-  border-bottom: 40px solid;
-  border-bottom-color: inherit;
+  border-bottom: 40px solid #000;
   background: transparent !important;
 }
 

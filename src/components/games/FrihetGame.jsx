@@ -296,19 +296,29 @@ function FrihetGame({ onBack, onScoreChange, multiplayerMode = false }) {
                 className="creative-canvas"
                 onClick={handleCanvasClick}
               >
-                {canvas.map(block => (
-                  <div
-                    key={block.id}
-                    className={`canvas-block shape-${block.shape}`}
-                    style={{
-                      left: `${block.x}%`,
-                      top: `${block.y}%`,
-                      background: block.color,
-                      width: `${block.size}px`,
-                      height: `${block.size}px`
-                    }}
-                  />
-                ))}
+                {canvas.map(block => {
+                  const style = {
+                    left: `${block.x}%`,
+                    top: `${block.y}%`,
+                  };
+                  
+                  // Triangle uses border-color, others use background
+                  if (block.shape === 'triangle') {
+                    style.borderBottomColor = block.color;
+                  } else {
+                    style.background = block.color;
+                    style.width = `${block.size}px`;
+                    style.height = `${block.size}px`;
+                  }
+                  
+                  return (
+                    <div
+                      key={block.id}
+                      className={`canvas-block shape-${block.shape}`}
+                      style={style}
+                    />
+                  );
+                })}
                 {canvas.length === 0 && (
                   <div className="canvas-placeholder">
                     Click to start building!
