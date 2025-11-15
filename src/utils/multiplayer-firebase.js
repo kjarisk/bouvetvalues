@@ -163,6 +163,30 @@ export const updatePlayerScore = async (roomCode, playerId, score, game) => {
   }
 };
 
+export const updateRoomState = async (roomCode, updates) => {
+  if (!useFirebase) {
+    return localMultiplayer.updateRoomState?.(roomCode, updates);
+  }
+  
+  try {
+    const roomRef = ref(database, `rooms/${roomCode}`);
+    const snapshot = await get(roomRef);
+    
+    if (!snapshot.exists()) return;
+    
+    const room = snapshot.val();
+    
+    // Apply updates
+    Object.assign(room, updates);
+    room.lastActivity = Date.now();
+    
+    await set(roomRef, room);
+    broadcastMessage('ROOM_UPDATED', { roomCode, updates });
+  } catch (error) {
+    console.error('Error updating room state:', error);
+  }
+};
+
 export const startGame = async (roomCode, gameId) => {
   if (!useFirebase) {
     return localMultiplayer.startGame(roomCode, gameId);
