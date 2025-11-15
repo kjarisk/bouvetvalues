@@ -65,6 +65,50 @@ function FrihetGame({ onBack, onScoreChange, multiplayerMode = false }) {
     { name: 'rectangle', icon: '▬', size: 40 }
   ];
 
+  // Define completeRound before it's used in useEffect
+  const completeRound = useCallback(() => {
+    setRoundComplete(true);
+    
+    const challenge = challenges[currentRound];
+    const blocksPlaced = canvas.length;
+    const uniqueColors = new Set(canvas.map(b => b.colorName)).size;
+    const uniqueShapes = new Set(canvas.map(b => b.shape)).size;
+    
+    // Calculate score
+    let roundScore = 0;
+    
+    // Base points if minimum blocks met
+    if (blocksPlaced >= challenge.minBlocks) {
+      roundScore += challenge.basePoints;
+    } else {
+      roundScore += (blocksPlaced / challenge.minBlocks) * challenge.basePoints * 0.5;
+    }
+    
+    // Bonus for creativity
+    const creativityBonus = (uniqueColors * 20) + (uniqueShapes * 15) + (blocksPlaced * 5);
+    roundScore += creativityBonus;
+    
+    // Time bonus
+    const timeBonus = timeLeft * 3;
+    roundScore += timeBonus;
+    
+    setScore(s => s + Math.floor(roundScore));
+    
+    // Show round complete screen for 2 seconds
+    setTimeout(() => {
+      if (currentRound < challenges.length - 1) {
+        // Next round
+        setCurrentRound(r => r + 1);
+        setCanvas([]);
+        setTimeLeft(challenges[currentRound + 1].timeLimit);
+        setRoundComplete(false);
+      } else {
+        // Game over
+        setGameState('gameOver');
+      }
+    }, 2500);
+  }, [currentRound, canvas, timeLeft, challenges]);
+
   // Timer
   useEffect(() => {
     if (gameState === 'playing' && timeLeft > 0 && !roundComplete) {
@@ -121,49 +165,6 @@ function FrihetGame({ onBack, onScoreChange, multiplayerMode = false }) {
   const clearCanvas = () => {
     setCanvas([]);
   };
-
-  const completeRound = useCallback(() => {
-    setRoundComplete(true);
-    
-    const challenge = challenges[currentRound];
-    const blocksPlaced = canvas.length;
-    const uniqueColors = new Set(canvas.map(b => b.colorName)).size;
-    const uniqueShapes = new Set(canvas.map(b => b.shape)).size;
-    
-    // Calculate score
-    let roundScore = 0;
-    
-    // Base points if minimum blocks met
-    if (blocksPlaced >= challenge.minBlocks) {
-      roundScore += challenge.basePoints;
-    } else {
-      roundScore += (blocksPlaced / challenge.minBlocks) * challenge.basePoints * 0.5;
-    }
-    
-    // Bonus for creativity
-    const creativityBonus = (uniqueColors * 20) + (uniqueShapes * 15) + (blocksPlaced * 5);
-    roundScore += creativityBonus;
-    
-    // Time bonus
-    const timeBonus = timeLeft * 3;
-    roundScore += timeBonus;
-    
-    setScore(s => s + Math.floor(roundScore));
-    
-    // Show round complete screen for 2 seconds
-    setTimeout(() => {
-      if (currentRound < challenges.length - 1) {
-        // Next round
-        setCurrentRound(r => r + 1);
-        setCanvas([]);
-        setTimeLeft(challenges[currentRound + 1].timeLimit);
-        setRoundComplete(false);
-      } else {
-        // Game over
-        setGameState('gameOver');
-      }
-    }, 2500);
-  }, [currentRound, canvas, timeLeft, challenges]);
 
   const saveScore = () => {
     if (multiplayerMode) {
