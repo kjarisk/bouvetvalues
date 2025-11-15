@@ -8,13 +8,13 @@ import { getDatabase } from 'firebase/database';
 // TODO: Replace with your Firebase config
 // You'll get this from Firebase Console -> Project Settings -> Your apps
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "YOUR_DATABASE_URL", // Important for Realtime Database!
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBwrb31u6xO6Rt_LipzZBDd0ZyZPTvPRfQ",
+  authDomain: "bouvetvalues.firebaseapp.com",
+  databaseURL: "https://bouvetvalues-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "bouvetvalues",
+  storageBucket: "bouvetvalues.firebasestorage.app",
+  messagingSenderId: "394362333112",
+  appId: "1:394362333112:web:67c054fd84cbf3a0ff114d"
 };
 
 // Initialize Firebase
