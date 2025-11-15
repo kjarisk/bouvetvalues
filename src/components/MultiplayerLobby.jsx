@@ -16,24 +16,29 @@ import {
 } from '../utils/multiplayer-firebase';
 import '../styles/lobby.css';
 
-function MultiplayerLobby({ onStartGame, onBackToSingle }) {
-  const [stage, setStage] = useState('setup'); // setup, lobby
-  const [playerName, setPlayerName] = useState('');
-  const [selectedAvatar, setSelectedAvatar] = useState('😀');
-  const [currentPlayer, setCurrentPlayer] = useState(null);
-  const [room, setRoom] = useState(null);
+function MultiplayerLobby({ onStartGame, onBackToSingle, existingRoom = null, existingPlayer = null }) {
+  const [stage, setStage] = useState(existingRoom && existingPlayer ? 'lobby' : 'setup'); // setup, lobby
+  const [playerName, setPlayerName] = useState(existingPlayer?.name || '');
+  const [selectedAvatar, setSelectedAvatar] = useState(existingPlayer?.avatar || '😀');
+  const [currentPlayer, setCurrentPlayer] = useState(existingPlayer);
+  const [room, setRoom] = useState(existingRoom);
   const [roomCode, setRoomCode] = useState('');
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
   const [hasStartedGame, setHasStartedGame] = useState(false);
 
   useEffect(() => {
+    // Skip if we already have an existing room/player (returning from game)
+    if (existingRoom && existingPlayer) {
+      return;
+    }
+    
     // Check if joining from URL
     const urlRoomCode = getRoomCodeFromUrl();
     if (urlRoomCode) {
       setRoomCode(urlRoomCode);
     }
-  }, []);
+  }, [existingRoom, existingPlayer]);
 
   useEffect(() => {
     if (room) {

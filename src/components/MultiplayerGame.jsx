@@ -3,7 +3,7 @@ import PlayerList from './PlayerList';
 import {
   getRoom,
   updatePlayerScore,
-  leaveRoom,
+  updateRoomState,
   subscribeToBroadcast,
   updatePlayerActivity,
   subscribeToRoom
@@ -76,10 +76,19 @@ function MultiplayerGame({ gameId, GameComponent, room: initialRoom, player, onB
     setGameScore(newScore);
   }, []);
 
-  const handleBack = useCallback(() => {
-    leaveRoom(roomCodeRef.current, player.id);
+  const handleBack = useCallback(async () => {
+    // Don't leave the room, just go back to lobby to select another game
+    // Update room state to lobby so all players return
+    try {
+      await updateRoomState(roomCodeRef.current, { 
+        gameState: 'lobby',
+        currentGame: null 
+      });
+    } catch (error) {
+      console.error('Error returning to lobby:', error);
+    }
     onBack();
-  }, [player.id, onBack]);
+  }, [onBack]);
 
   // Memoize the game component to prevent unnecessary re-renders
   const gameElement = useMemo(() => (

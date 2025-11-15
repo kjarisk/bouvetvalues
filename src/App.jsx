@@ -94,6 +94,8 @@ function App() {
         <MultiplayerLobby
           onStartGame={handleMultiplayerGameStart}
           onBackToSingle={handleBackToHome}
+          existingRoom={multiplayerData?.room}
+          existingPlayer={multiplayerData?.player}
         />
       </>
     );
