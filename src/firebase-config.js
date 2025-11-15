@@ -20,17 +20,23 @@ const firebaseConfig = {
 // Initialize Firebase
 let app;
 let database;
+let firebaseInitialized = false;
 
 try {
   app = initializeApp(firebaseConfig);
   database = getDatabase(app);
+  firebaseInitialized = true;
+  console.log("✅ Firebase initialized successfully!");
+  console.log("🔥 Using Firebase Realtime Database for multiplayer");
 } catch (error) {
-  console.error("Firebase initialization error:", error);
-  console.log("Multiplayer will use fallback localStorage mode");
+  console.error("❌ Firebase initialization error:", error);
+  console.warn("⚠️ Multiplayer will use fallback localStorage mode (local only)");
 }
 
 export { database };
 export const isFirebaseConfigured = () => {
-  return firebaseConfig.apiKey !== "YOUR_API_KEY";
+  const configured = firebaseConfig.apiKey !== "YOUR_API_KEY" && firebaseInitialized && database !== undefined;
+  console.log(`🔍 Firebase configured: ${configured}`);
+  return configured;
 };
 

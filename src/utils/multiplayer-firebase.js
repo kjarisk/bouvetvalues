@@ -9,6 +9,7 @@ const ROOM_EXPIRY = 3600000; // 1 hour
 
 // Check if Firebase is available
 const useFirebase = isFirebaseConfigured();
+console.log(`🚀 Multiplayer mode: ${useFirebase ? 'FIREBASE (Online)' : 'LocalStorage (Local only)'}`);
 
 // BroadcastChannel for local tab sync (still useful for same-device)
 let broadcastChannel = null;
