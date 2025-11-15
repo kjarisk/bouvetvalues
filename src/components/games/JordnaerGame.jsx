@@ -53,20 +53,22 @@ function JordnaerGame({ onBack, onScoreChange, multiplayerMode = false, currentP
       
       const gameLoop = (timestamp) => {
         const deltaTime = timestamp - lastUpdateTime.current;
-        lastUpdateTime.current = timestamp;
         
         // Only update every ~33ms (30fps for game logic, smoother than before)
         if (deltaTime < 33) {
           gameLoopRef.current = requestAnimationFrame(gameLoop);
           return;
         }
+        
+        // Update the timestamp only when we actually process the update
+        lastUpdateTime.current = timestamp;
 
         setFallingItems(prev => {
           let newItems = [...prev];
           
           // Spawn new items (throttled)
-          if (timestamp - lastSpawnTime.current > 300) { // Spawn check every 300ms
-            if (Math.random() < 0.4) { // Adjusted probability for 300ms interval
+          if (timestamp - lastSpawnTime.current > 200) { // Spawn check every 200ms
+            if (Math.random() < 0.5) { // 50% chance to spawn
               lastSpawnTime.current = timestamp;
               const isBuzzword = Math.random() < 0.6;
               const items = isBuzzword ? buzzwords : goodItems;
