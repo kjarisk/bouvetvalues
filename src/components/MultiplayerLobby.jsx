@@ -12,8 +12,7 @@ import {
   subscribeToBroadcast,
   updatePlayerActivity,
   subscribeToRoom,
-  startGame,
-  getActiveRooms
+  startGame
 } from '../utils/multiplayer-firebase';
 import '../styles/lobby.css';
 
@@ -27,8 +26,6 @@ function MultiplayerLobby({ onStartGame, onBackToSingle, existingRoom = null, ex
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
   const [hasStartedGame, setHasStartedGame] = useState(false);
-  const [availableRooms, setAvailableRooms] = useState([]);
-  const [loadingRooms, setLoadingRooms] = useState(false);
 
   useEffect(() => {
     // Skip if we already have an existing room/player (returning from game)
@@ -41,35 +38,7 @@ function MultiplayerLobby({ onStartGame, onBackToSingle, existingRoom = null, ex
     if (urlRoomCode) {
       setRoomCode(urlRoomCode);
     }
-    
-    // Load available rooms
-    loadAvailableRooms();
-    
-    // Refresh room list every 5 seconds
-    const roomRefreshInterval = setInterval(() => {
-      loadAvailableRooms();
-    }, 5000);
-    
-    return () => clearInterval(roomRefreshInterval);
   }, [existingRoom, existingPlayer]);
-  
-  const loadAvailableRooms = async () => {
-    try {
-      setLoadingRooms(true);
-      const rooms = await getActiveRooms();
-      console.log('📋 Loaded active rooms:', rooms);
-      console.log('📋 Number of rooms:', rooms.length);
-      if (rooms.length > 0) {
-        console.log('📋 First room details:', rooms[0]);
-      }
-      setAvailableRooms(rooms || []);
-    } catch (error) {
-      console.error('❌ Error loading rooms:', error);
-      setAvailableRooms([]);
-    } finally {
-      setLoadingRooms(false);
-    }
-  };
 
   useEffect(() => {
     if (room) {
@@ -162,25 +131,6 @@ function MultiplayerLobby({ onStartGame, onBackToSingle, existingRoom = null, ex
       setError(err.message);
     }
   };
-  
-  const handleJoinRoomFromList = async (roomToJoin) => {
-    if (!playerName.trim()) {
-      setError('Please enter your name first');
-      return;
-    }
-
-    try {
-      setError('');
-      const player = createPlayer(playerName.trim(), selectedAvatar);
-      setCurrentPlayer(player);
-      
-      const joinedRoom = await joinRoom(roomToJoin.code, player);
-      setRoom(joinedRoom);
-      setStage('lobby');
-    } catch (err) {
-      setError(err.message);
-    }
-  };
 
   const handleLeaveRoom = () => {
     if (room && currentPlayer) {
@@ -229,50 +179,6 @@ function MultiplayerLobby({ onStartGame, onBackToSingle, existingRoom = null, ex
             />
 
             {error && <div className="error-message">{error}</div>}
-
-            {/* Available Rooms List */}
-            {availableRooms.length > 0 && (
-              <div className="available-rooms-section">
-                <h3>🏠 Available Rooms</h3>
-                <div className="available-rooms-list">
-                  {availableRooms.map(availRoom => (
-                    <div 
-                      key={availRoom.code}
-                      className={`room-item ${!playerName.trim() ? 'disabled' : ''}`}
-                      onClick={() => playerName.trim() && handleJoinRoomFromList(availRoom)}
-                    >
-                      <div className="room-item-header">
-                        <span className="room-code-badge">{availRoom.code}</span>
-                        <span className="room-players-count">
-                          👥 {availRoom.players?.length || 0}/6
-                        </span>
-                      </div>
-                      <div className="room-item-players">
-                        {availRoom.players?.slice(0, 3).map((p, i) => (
-                          <span key={i} className="room-player-avatar">{p.avatar}</span>
-                        ))}
-                        {availRoom.players?.length > 3 && (
-                          <span className="room-more-players">+{availRoom.players.length - 3}</span>
-                        )}
-                      </div>
-                      <div className="room-item-status">
-                        {availRoom.gameState === 'playing' ? '🎮 Playing' : '⏳ Waiting'}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {loadingRooms && availableRooms.length === 0 && (
-              <div className="loading-rooms">Loading rooms...</div>
-            )}
-
-            {!loadingRooms && availableRooms.length === 0 && (
-              <div className="no-rooms-message">
-                No active rooms. Create one below! 👇
-              </div>
-            )}
 
             <div className="lobby-actions">
               <button
