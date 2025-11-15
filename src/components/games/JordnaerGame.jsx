@@ -11,6 +11,7 @@ function JordnaerGame({ onBack, onScoreChange, multiplayerMode = false, currentP
   const [playerVelocity, setPlayerVelocity] = useState(2); // falling speed
   const [buzzwordHits, setBuzzwordHits] = useState(0); // Track bad hits
   const [goodStreak, setGoodStreak] = useState(0); // Track consecutive good items
+  const [bestStreak, setBestStreak] = useState(0); // Track best streak in this game
   const [streakPopup, setStreakPopup] = useState(''); // Streak celebration message
   const [motivationPopup, setMotivationPopup] = useState(''); // Motivation message
   const [hitEffects, setHitEffects] = useState([]); // Visual effects when collecting items
@@ -138,6 +139,10 @@ function JordnaerGame({ onBack, onScoreChange, multiplayerMode = false, currentP
                   setScore(s => s + 20);
                   setGoodStreak(streak => {
                     const newStreak = streak + 1;
+                    
+                    // Update best streak
+                    setBestStreak(best => Math.max(best, newStreak));
+                    
                     if (newStreak === 5) {
                       const msg = streakMessages[Math.floor(Math.random() * streakMessages.length)];
                       setStreakPopup(msg);
@@ -233,6 +238,7 @@ function JordnaerGame({ onBack, onScoreChange, multiplayerMode = false, currentP
     setPlayerVelocity(2);
     setBuzzwordHits(0);
     setGoodStreak(0);
+    setBestStreak(0);
     setStreakPopup('');
     setMotivationPopup('');
     setCollectEffects([]);
@@ -425,7 +431,7 @@ function JordnaerGame({ onBack, onScoreChange, multiplayerMode = false, currentP
             <div className="stats-summary">
               <div className="stat-item">
                 <span className="stat-label">Best Streak:</span>
-                <span className="stat-value">{goodStreak} 🔥</span>
+                <span className="stat-value">{bestStreak} 🔥</span>
               </div>
               <div className="stat-item">
                 <span className="stat-label">Buzzwords Hit:</span>
