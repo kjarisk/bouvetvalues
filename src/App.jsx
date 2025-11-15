@@ -7,7 +7,6 @@ import EntusiastiskGame from './components/games/EntusiastiskGame';
 import DelingskultureGame from './components/games/DelingskultureGame';
 import FrihetGame from './components/games/FrihetGame';
 import TroverdighetGame from './components/games/TroverdighetGame';
-import BackgroundMusic from './components/BackgroundMusic';
 
 function App() {
   const [mode, setMode] = useState('home'); // home, singlePlayer, multiplayer, game
@@ -89,15 +88,12 @@ function App() {
 
   if (mode === 'multiplayer') {
     return (
-      <>
-        <BackgroundMusic />
-        <MultiplayerLobby
-          onStartGame={handleMultiplayerGameStart}
-          onBackToSingle={handleBackToHome}
-          existingRoom={multiplayerData?.room}
-          existingPlayer={multiplayerData?.player}
-        />
-      </>
+      <MultiplayerLobby
+        onStartGame={handleMultiplayerGameStart}
+        onBackToSingle={handleBackToHome}
+        existingRoom={multiplayerData?.room}
+        existingPlayer={multiplayerData?.player}
+      />
     );
   }
 
@@ -107,63 +103,47 @@ function App() {
     
     if (multiplayerData) {
       return (
-        <>
-          <BackgroundMusic />
-          <MultiplayerGame
-            gameId={currentGame}
-            GameComponent={GameComponent}
-            room={multiplayerData.room}
-            player={multiplayerData.player}
-            onBack={handleBackToLobby}
-          />
-        </>
+        <MultiplayerGame
+          gameId={currentGame}
+          GameComponent={GameComponent}
+          room={multiplayerData.room}
+          player={multiplayerData.player}
+          onBack={handleBackToLobby}
+        />
       );
     }
     
-    return (
-      <>
-        <BackgroundMusic />
-        <GameComponent gameId={currentGame} onBack={handleBackToHome} />
-      </>
-    );
+    return <GameComponent gameId={currentGame} onBack={handleBackToHome} />;
   }
 
   if (mode === 'singlePlayer') {
-    return (
-      <>
-        <BackgroundMusic />
-        <HomePage games={games} onGameSelect={handleGameSelect} onBack={handleBackToHome} />
-      </>
-    );
+    return <HomePage games={games} onGameSelect={handleGameSelect} onBack={handleBackToHome} />;
   }
 
   // Home screen with mode selection
   return (
-    <>
-      <BackgroundMusic />
-      <div className="app-container">
-        <div className="home-container">
-          <header className="header">
-            <h1>🎮 Bouvet Values Arcade</h1>
-            <p>Play mini-games, learn values, compete for glory!</p>
-          </header>
+    <div className="app-container">
+      <div className="home-container">
+        <header className="header">
+          <h1>🎮 Bouvet Values Arcade</h1>
+          <p>Play mini-games, learn values, compete for glory!</p>
+        </header>
+        
+        <div className="mode-selection">
+          <div className="mode-card" onClick={handleSinglePlayer}>
+            <div className="mode-icon">🎯</div>
+            <h2>Single Player</h2>
+            <p>Play solo and compete on the global leaderboard</p>
+          </div>
           
-          <div className="mode-selection">
-            <div className="mode-card" onClick={handleSinglePlayer}>
-              <div className="mode-icon">🎯</div>
-              <h2>Single Player</h2>
-              <p>Play solo and compete on the global leaderboard</p>
-            </div>
-            
-            <div className="mode-card" onClick={handleMultiplayer}>
-              <div className="mode-icon">👥</div>
-              <h2>Multiplayer</h2>
-              <p>Create or join a room and compete with friends in real-time!</p>
-            </div>
+          <div className="mode-card" onClick={handleMultiplayer}>
+            <div className="mode-icon">👥</div>
+            <h2>Multiplayer</h2>
+            <p>Create or join a room and compete with friends in real-time!</p>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
