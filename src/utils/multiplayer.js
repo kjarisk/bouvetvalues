@@ -123,6 +123,35 @@ export const startGame = (roomCode, gameId) => {
   broadcastMessage('GAME_STARTED', { roomCode, gameId });
 };
 
+export const updateRoomState = (roomCode, updates) => {
+  const room = getRoom(roomCode);
+  if (!room) return;
+  
+  // Apply updates
+  Object.assign(room, updates);
+  room.lastActivity = Date.now();
+  
+  saveRoom(room);
+  broadcastMessage('ROOM_UPDATED', { roomCode, updates });
+};
+
+export const finalizeGameScores = (roomCode) => {
+  const room = getRoom(roomCode);
+  if (!room) return;
+  
+  // Add current scores to total scores
+  room.players.forEach(p => {
+    p.totalScore = (p.totalScore || 0) + (p.currentScore || 0);
+    p.currentScore = 0;
+    p.currentGame = null;
+  });
+  
+  room.lastActivity = Date.now();
+  
+  saveRoom(room);
+  broadcastMessage('GAME_FINALIZED', { roomCode });
+};
+
 export const endGame = (roomCode) => {
   const room = getRoom(roomCode);
   if (!room) return;
