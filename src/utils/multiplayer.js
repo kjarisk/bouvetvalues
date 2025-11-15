@@ -41,8 +41,10 @@ export const createRoom = (hostPlayer) => {
     lastActivity: Date.now()
   };
   
+  console.log('🏠 [LocalStorage] Creating room:', room);
   saveRoom(room);
   broadcastMessage('ROOM_CREATED', room);
+  console.log('🏠 [LocalStorage] Room saved, broadcasting...');
   return room;
 };
 
@@ -180,7 +182,10 @@ const deleteRoom = (roomCode) => {
 
 export const getActiveRooms = () => {
   const data = getAllRooms();
-  return Object.values(data);
+  const rooms = Object.values(data);
+  console.log('🔍 [LocalStorage] getAllRooms data:', data);
+  console.log('🔍 [LocalStorage] Returning rooms:', rooms);
+  return rooms;
 };
 
 // Helper functions

@@ -332,17 +332,27 @@ export const subscribeToRoom = (roomCode, callback) => {
 };
 
 export const getActiveRooms = async () => {
+  console.log('🔍 getActiveRooms called, useFirebase:', useFirebase);
+  
   if (!useFirebase) {
-    return localMultiplayer.getActiveRooms();
+    const rooms = localMultiplayer.getActiveRooms();
+    console.log('🔍 [Wrapper] LocalStorage rooms:', rooms);
+    return rooms;
   }
   
   try {
+    console.log('🔍 [Firebase] Fetching rooms...');
     const snapshot = await get(ref(database, 'rooms'));
-    if (!snapshot.exists()) return [];
+    if (!snapshot.exists()) {
+      console.log('🔍 [Firebase] No rooms exist');
+      return [];
+    }
     
     const rooms = snapshot.val();
     const now = Date.now();
     const ONE_HOUR = 60 * 60 * 1000;
+    
+    console.log('🔍 [Firebase] Raw rooms:', rooms);
     
     // Filter out expired rooms and return active ones
     const activeRooms = Object.values(rooms).filter(room => {
@@ -350,12 +360,15 @@ export const getActiveRooms = async () => {
       const isRecent = (now - room.lastActivity) < ONE_HOUR;
       // Keep rooms with at least one player
       const hasPlayers = room.players && (Array.isArray(room.players) ? room.players.length > 0 : Object.keys(room.players).length > 0);
-      return isRecent && hasPlayers;
+      const keep = isRecent && hasPlayers;
+      console.log(`🔍 [Firebase] Room ${room.code}: isRecent=${isRecent}, hasPlayers=${hasPlayers}, keep=${keep}`);
+      return keep;
     });
     
+    console.log('🔍 [Firebase] Active rooms after filtering:', activeRooms);
     return activeRooms;
   } catch (error) {
-    console.error('Error getting active rooms:', error);
+    console.error('❌ [Firebase] Error getting active rooms:', error);
     return [];
   }
 };
