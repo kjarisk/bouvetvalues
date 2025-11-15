@@ -28,7 +28,11 @@ function PlayerList({ players, hostId, currentPlayerId, showScores = false }) {
           </div>
           {showScores && (
             <div className="player-score">
-              {player.currentScore || 0} pts
+              {player.currentGame ? (
+                <span>{player.currentScore || 0} pts</span>
+              ) : (
+                <span className="total-score">🏆 {player.totalScore || 0} total</span>
+              )}
             </div>
           )}
         </div>

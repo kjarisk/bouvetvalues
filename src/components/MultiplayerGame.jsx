@@ -4,6 +4,7 @@ import {
   getRoom,
   updatePlayerScore,
   updateRoomState,
+  finalizeGameScores,
   subscribeToBroadcast,
   updatePlayerActivity,
   subscribeToRoom
@@ -21,6 +22,13 @@ function MultiplayerGame({ gameId, GameComponent, room: initialRoom, player, onB
     // Subscribe to real-time room updates
     const unsubscribeRoom = subscribeToRoom(roomCodeRef.current, (updatedRoom) => {
       if (!updatedRoom) return;
+      
+      // If room state changed back to lobby, automatically return all players
+      if (updatedRoom.gameState === 'lobby' && updatedRoom.currentGame === null) {
+        onBack();
+        return;
+      }
+      
       // Only update room state, don't cause game remount
       setRoom(updatedRoom);
     });
@@ -78,8 +86,11 @@ function MultiplayerGame({ gameId, GameComponent, room: initialRoom, player, onB
 
   const handleBack = useCallback(async () => {
     // Don't leave the room, just go back to lobby to select another game
-    // Update room state to lobby so all players return
     try {
+      // First finalize scores (add current score to total score)
+      await finalizeGameScores(roomCodeRef.current);
+      
+      // Then update room state to lobby so all players return
       await updateRoomState(roomCodeRef.current, { 
         gameState: 'lobby',
         currentGame: null 

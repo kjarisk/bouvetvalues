@@ -179,7 +179,7 @@ export const startGame = async (roomCode, gameId) => {
     room.gameState = 'playing';
     room.gameStartTime = Date.now();
     
-    // Reset scores
+    // Reset current scores for new game
     room.players.forEach(p => {
       p.currentScore = 0;
       p.currentGame = gameId;
@@ -191,6 +191,35 @@ export const startGame = async (roomCode, gameId) => {
     broadcastMessage('GAME_STARTED', { roomCode, gameId });
   } catch (error) {
     console.error('Error starting game:', error);
+  }
+};
+
+export const finalizeGameScores = async (roomCode) => {
+  if (!useFirebase) {
+    return localMultiplayer.finalizeGameScores?.(roomCode);
+  }
+  
+  try {
+    const roomRef = ref(database, `rooms/${roomCode}`);
+    const snapshot = await get(roomRef);
+    
+    if (!snapshot.exists()) return;
+    
+    const room = snapshot.val();
+    
+    // Add current scores to total scores
+    room.players.forEach(p => {
+      p.totalScore = (p.totalScore || 0) + (p.currentScore || 0);
+      p.currentScore = 0;
+      p.currentGame = null;
+    });
+    
+    room.lastActivity = Date.now();
+    
+    await set(roomRef, room);
+    broadcastMessage('GAME_FINALIZED', { roomCode });
+  } catch (error) {
+    console.error('Error finalizing scores:', error);
   }
 };
 
