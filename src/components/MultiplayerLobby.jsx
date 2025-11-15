@@ -57,6 +57,7 @@ function MultiplayerLobby({ onStartGame, onBackToSingle, existingRoom = null, ex
     try {
       setLoadingRooms(true);
       const rooms = await getActiveRooms();
+      console.log('Loaded active rooms:', rooms);
       setAvailableRooms(rooms);
     } catch (error) {
       console.error('Error loading rooms:', error);

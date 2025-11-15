@@ -341,7 +341,19 @@ export const getActiveRooms = async () => {
     if (!snapshot.exists()) return [];
     
     const rooms = snapshot.val();
-    return Object.values(rooms);
+    const now = Date.now();
+    const ONE_HOUR = 60 * 60 * 1000;
+    
+    // Filter out expired rooms and return active ones
+    const activeRooms = Object.values(rooms).filter(room => {
+      // Keep rooms that are less than 1 hour old
+      const isRecent = (now - room.lastActivity) < ONE_HOUR;
+      // Keep rooms with at least one player
+      const hasPlayers = room.players && (Array.isArray(room.players) ? room.players.length > 0 : Object.keys(room.players).length > 0);
+      return isRecent && hasPlayers;
+    });
+    
+    return activeRooms;
   } catch (error) {
     console.error('Error getting active rooms:', error);
     return [];
