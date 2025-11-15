@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { addScore } from '../../utils/leaderboard';
 import '../../styles/frihet.css';
 
-function FrihetGame({ onBack, onScoreChange, multiplayerMode = false, currentPlayer }) {
+function FrihetGame({ onBack, onScoreChange, multiplayerMode = false }) {
   const [gameState, setGameState] = useState('ready');
   const [score, setScore] = useState(0);
   const [playerName, setPlayerName] = useState('');
@@ -79,7 +79,7 @@ function FrihetGame({ onBack, onScoreChange, multiplayerMode = false, currentPla
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, [gameState, timeLeft, roundComplete]);
+  }, [gameState, timeLeft, roundComplete, completeRound]);
 
   const startGame = () => {
     setGameState('playing');
@@ -122,7 +122,7 @@ function FrihetGame({ onBack, onScoreChange, multiplayerMode = false, currentPla
     setCanvas([]);
   };
 
-  const completeRound = () => {
+  const completeRound = useCallback(() => {
     setRoundComplete(true);
     
     const challenge = challenges[currentRound];
@@ -163,7 +163,7 @@ function FrihetGame({ onBack, onScoreChange, multiplayerMode = false, currentPla
         setGameState('gameOver');
       }
     }, 2500);
-  };
+  }, [currentRound, canvas, timeLeft, challenges]);
 
   const saveScore = () => {
     if (multiplayerMode) {
