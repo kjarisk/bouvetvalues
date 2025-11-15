@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import PlayerList from './PlayerList';
 import {
   getRoom,
@@ -15,23 +15,26 @@ function MultiplayerGame({ gameId, GameComponent, room: initialRoom, player, onB
   const [showPlayers, setShowPlayers] = useState(true);
   const [gameScore, setGameScore] = useState(0);
   const scoreUpdateTimeout = useRef(null);
+  const roomCodeRef = useRef(initialRoom.code);
 
   useEffect(() => {
     // Subscribe to real-time room updates
-    const unsubscribeRoom = subscribeToRoom(room.code, (updatedRoom) => {
+    const unsubscribeRoom = subscribeToRoom(roomCodeRef.current, (updatedRoom) => {
+      if (!updatedRoom) return;
+      // Only update room state, don't cause game remount
       setRoom(updatedRoom);
     });
     
     // Subscribe to broadcast updates for local sync
     const unsubscribeBroadcast = subscribeToBroadcast((message) => {
-      if (message.data.roomCode === room.code) {
+      if (message.data.roomCode === roomCodeRef.current) {
         refreshRoom();
       }
     });
 
     // Activity heartbeat
     const activityInterval = setInterval(() => {
-      updatePlayerActivity(room.code, player.id);
+      updatePlayerActivity(roomCodeRef.current, player.id);
     }, 5000);
 
     return () => {
@@ -39,7 +42,7 @@ function MultiplayerGame({ gameId, GameComponent, room: initialRoom, player, onB
       unsubscribeBroadcast();
       clearInterval(activityInterval);
     };
-  }, [room.code, player.id]);
+  }, [player.id]); // Only depend on player.id, not room
 
   // Monitor score changes and update
   useEffect(() => {
@@ -51,7 +54,7 @@ function MultiplayerGame({ gameId, GameComponent, room: initialRoom, player, onB
     }
 
     scoreUpdateTimeout.current = setTimeout(() => {
-      updatePlayerScore(room.code, player.id, gameScore, gameId);
+      updatePlayerScore(roomCodeRef.current, player.id, gameScore, gameId);
     }, 300); // Update every 300ms max
 
     return () => {
@@ -59,56 +62,61 @@ function MultiplayerGame({ gameId, GameComponent, room: initialRoom, player, onB
         clearTimeout(scoreUpdateTimeout.current);
       }
     };
-  }, [gameScore, room.code, player.id, gameId]);
+  }, [gameScore, player.id, gameId]);
 
   const refreshRoom = async () => {
-    const updatedRoom = await getRoom(room.code);
+    const updatedRoom = await getRoom(roomCodeRef.current);
     if (updatedRoom) {
       setRoom(updatedRoom);
     }
   };
 
-  const handleBack = () => {
-    leaveRoom(room.code, player.id);
+  // Memoize callback functions to prevent game remounts
+  const handleScoreChange = useCallback((newScore) => {
+    setGameScore(newScore);
+  }, []);
+
+  const handleBack = useCallback(() => {
+    leaveRoom(roomCodeRef.current, player.id);
     onBack();
-  };
+  }, [player.id, onBack]);
 
-  // Create a wrapped version of the game component that intercepts score updates
-  const GameWrapper = () => {
-    return (
-      <div className="multiplayer-game-wrapper">
-        <GameComponent
-          gameId={gameId}
-          onBack={handleBack}
-          onScoreChange={setGameScore}
-          multiplayerMode={true}
-          currentPlayer={player}
-        />
-        
-        {/* Floating player list */}
-        <div className={`floating-players ${showPlayers ? 'visible' : 'hidden'}`}>
-          <button
-            className="toggle-players-btn"
-            onClick={() => setShowPlayers(!showPlayers)}
-          >
-            {showPlayers ? '▶' : '◀'} Players
-          </button>
-          {showPlayers && (
-            <div className="players-content">
-              <PlayerList
-                players={room.players}
-                hostId={room.host}
-                currentPlayerId={player.id}
-                showScores={true}
-              />
-            </div>
-          )}
-        </div>
+  // Memoize the game component to prevent unnecessary re-renders
+  const gameElement = useMemo(() => (
+    <GameComponent
+      gameId={gameId}
+      onBack={handleBack}
+      onScoreChange={handleScoreChange}
+      multiplayerMode={true}
+      currentPlayer={player}
+    />
+  ), [gameId, GameComponent, handleBack, handleScoreChange, player]);
+
+  return (
+    <div className="multiplayer-game-wrapper">
+      {gameElement}
+      
+      {/* Floating player list */}
+      <div className={`floating-players ${showPlayers ? 'visible' : 'hidden'}`}>
+        <button
+          className="toggle-players-btn"
+          onClick={() => setShowPlayers(!showPlayers)}
+        >
+          {showPlayers ? '▶' : '◀'} Players
+        </button>
+        {showPlayers && (
+          <div className="players-content">
+            <PlayerList
+              players={room.players}
+              hostId={room.host}
+              currentPlayerId={player.id}
+              showScores={true}
+            />
+          </div>
+        )}
       </div>
-    );
-  };
-
-  return <GameWrapper />;
+    </div>
+  );
 }
 
 export default MultiplayerGame;
