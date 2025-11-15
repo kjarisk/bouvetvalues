@@ -43,14 +43,16 @@ function MultiplayerGame({ gameId, GameComponent, room: initialRoom, player, onB
 
   // Monitor score changes and update
   useEffect(() => {
-    // Debounce score updates
+    if (gameScore === 0) return; // Don't update initial score of 0
+    
+    // Debounce score updates to reduce Firebase writes
     if (scoreUpdateTimeout.current) {
       clearTimeout(scoreUpdateTimeout.current);
     }
 
     scoreUpdateTimeout.current = setTimeout(() => {
       updatePlayerScore(room.code, player.id, gameScore, gameId);
-    }, 500);
+    }, 300); // Update every 300ms max
 
     return () => {
       if (scoreUpdateTimeout.current) {

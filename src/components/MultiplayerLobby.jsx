@@ -11,7 +11,8 @@ import {
   createPlayer,
   subscribeToBroadcast,
   updatePlayerActivity,
-  subscribeToRoom
+  subscribeToRoom,
+  startGame
 } from '../utils/multiplayer-firebase';
 import '../styles/lobby.css';
 
@@ -24,6 +25,7 @@ function MultiplayerLobby({ onStartGame, onBackToSingle }) {
   const [roomCode, setRoomCode] = useState('');
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
+  const [hasStartedGame, setHasStartedGame] = useState(false);
 
   useEffect(() => {
     // Check if joining from URL
@@ -39,9 +41,15 @@ function MultiplayerLobby({ onStartGame, onBackToSingle }) {
       const unsubscribeRoom = subscribeToRoom(room.code, (updatedRoom) => {
         setRoom(updatedRoom);
         
-        // Check if game started
-        if (updatedRoom.gameState === 'playing' && updatedRoom.currentGame) {
+        // Only start game if we haven't started yet and game state changed to playing
+        if (updatedRoom.gameState === 'playing' && updatedRoom.currentGame && !hasStartedGame) {
+          setHasStartedGame(true);
           onStartGame(updatedRoom.currentGame, updatedRoom, currentPlayer);
+        }
+        
+        // Reset flag when returning to lobby
+        if (updatedRoom.gameState === 'lobby') {
+          setHasStartedGame(false);
         }
       });
 
@@ -63,7 +71,7 @@ function MultiplayerLobby({ onStartGame, onBackToSingle }) {
         clearInterval(activityInterval);
       };
     }
-  }, [room, currentPlayer]);
+  }, [room, currentPlayer, hasStartedGame]);
 
   const refreshRoom = async () => {
     if (room) {
@@ -135,7 +143,10 @@ function MultiplayerLobby({ onStartGame, onBackToSingle }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleSelectGame = (gameId) => {
+  const handleSelectGame = async (gameId) => {
+    setHasStartedGame(true);
+    // Notify Firebase that game is starting
+    await startGame(room.code, gameId);
     onStartGame(gameId, room, currentPlayer);
   };
 
