@@ -2,17 +2,22 @@ import { useMemo } from 'react';
 import '../styles/avatar.css';
 
 function PlayerList({ players, hostId, currentPlayerId, showScores = false }) {
-  // Sort players by score (highest first) when showing scores
+  // Sort players by TOTAL accumulated score (totalScore + currentScore)
   const sortedPlayers = useMemo(() => {
     if (!showScores) return players;
     
     return [...players].sort((a, b) => {
-      // Use currentScore when playing, totalScore in lobby
-      const scoreA = a.currentGame ? (a.currentScore || 0) : (a.totalScore || 0);
-      const scoreB = b.currentGame ? (b.currentScore || 0) : (b.totalScore || 0);
+      // Always use total accumulated score (total + current)
+      const scoreA = (a.totalScore || 0) + (a.currentScore || 0);
+      const scoreB = (b.totalScore || 0) + (b.currentScore || 0);
       return scoreB - scoreA; // Descending order
     });
   }, [players, showScores]);
+  
+  // Calculate display score (cumulative across all games)
+  const getDisplayScore = (player) => {
+    return (player.totalScore || 0) + (player.currentScore || 0);
+  };
 
   const getRankEmoji = (index) => {
     if (!showScores) return null;
@@ -58,11 +63,14 @@ function PlayerList({ players, hostId, currentPlayerId, showScores = false }) {
           </div>
           {showScores && (
             <div className="player-score">
-              {player.currentGame ? (
-                <span className="score-value">{player.currentScore || 0} pts</span>
-              ) : (
-                <span className="total-score">🏆 {player.totalScore || 0}</span>
-              )}
+              <div className="score-display">
+                <span className="score-value">{getDisplayScore(player)}</span>
+                {player.currentGame && player.currentScore > 0 && (
+                  <span className="score-breakdown">
+                    ({player.totalScore || 0} + {player.currentScore || 0})
+                  </span>
+                )}
+              </div>
             </div>
           )}
         </div>
