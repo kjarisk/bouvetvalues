@@ -19,47 +19,31 @@ function FrihetGame({ onBack, onScoreChange, multiplayerMode = false, currentPla
     }
   }, [score, multiplayerMode, onScoreChange]);
 
-  // Creative challenges with goals
+  // Creative challenges with goals (simplified for easier gameplay)
   const challenges = [
     {
       title: '🏠 Build a House',
-      description: 'Create a house using blocks!',
-      hints: ['Start with a base', 'Add walls', 'Don\'t forget the roof!'],
-      minBlocks: 8,
-      timeLimit: 30,
+      description: 'Create a simple house!',
+      hints: ['Add a base', 'Make walls', 'Add a roof'],
+      minBlocks: 4,
+      timeLimit: 45,
       basePoints: 100
     },
     {
-      title: '🚗 Design a Car',
-      description: 'Build a creative vehicle!',
-      hints: ['Add wheels', 'Create the body', 'Windows?'],
-      minBlocks: 6,
-      timeLimit: 25,
+      title: '😊 Make a Smiley Face',
+      description: 'Create a happy face!',
+      hints: ['Two eyes', 'Big smile', 'Have fun!'],
+      minBlocks: 3,
+      timeLimit: 40,
       basePoints: 150
     },
     {
-      title: '😊 Make a Smiley Face',
-      description: 'Express happiness with blocks!',
-      hints: ['Eyes first', 'Add a smile', 'Be creative!'],
+      title: '🎨 Free Creation',
+      description: 'Build whatever you want!',
+      hints: ['Be creative!', 'Use colors', 'Express yourself!'],
       minBlocks: 5,
-      timeLimit: 20,
+      timeLimit: 50,
       basePoints: 200
-    },
-    {
-      title: '🌳 Grow a Tree',
-      description: 'Plant a colorful tree!',
-      hints: ['Brown trunk', 'Green leaves', 'Maybe some fruits?'],
-      minBlocks: 7,
-      timeLimit: 25,
-      basePoints: 250
-    },
-    {
-      title: '🎨 Abstract Art',
-      description: 'Create something unique and colorful!',
-      hints: ['Use all colors', 'Be bold!', 'Freedom!'],
-      minBlocks: 12,
-      timeLimit: 35,
-      basePoints: 300
     }
   ];
 
@@ -213,11 +197,11 @@ function FrihetGame({ onBack, onScoreChange, multiplayerMode = false, currentPla
               Express Your Creativity!
             </p>
             <div style={{ textAlign: 'left', margin: '1.5rem 0', maxWidth: '500px' }}>
-              <p>🎯 <strong>{challenges.length} Creative Challenges</strong> await!</p>
-              <p>🖌️ <strong>Build freely</strong> using colors and shapes</p>
-              <p>⭐ <strong>Complete goals</strong> to earn points</p>
-              <p>🚀 <strong>Creativity bonus</strong> for unique designs!</p>
-              <p>⏱️ <strong>Time pressure</strong> - work fast!</p>
+              <p>🎯 <strong>{challenges.length} Fun Challenges</strong> - easy and creative!</p>
+              <p>🖌️ <strong>Click to place</strong> colorful shapes</p>
+              <p>⭐ <strong>Meet minimum blocks</strong> to complete each round</p>
+              <p>🚀 <strong>Use different colors</strong> for bonus points!</p>
+              <p>⏱️ <strong>Plenty of time</strong> - no rush!</p>
             </div>
             <button className="btn btn-primary btn-large" onClick={startGame}>
               🎨 Start Creating!
