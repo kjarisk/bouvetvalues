@@ -7,11 +7,17 @@ import EntusiastiskGame from './components/games/EntusiastiskGame';
 import DelingskultureGame from './components/games/DelingskultureGame';
 import FrihetGame from './components/games/FrihetGame';
 import TroverdighetGame from './components/games/TroverdighetGame';
+import CamillaGame from './components/games/CamillaGame';
 
 function App() {
   const [mode, setMode] = useState('home'); // home, singlePlayer, multiplayer, game
   const [currentGame, setCurrentGame] = useState(null);
   const [multiplayerData, setMultiplayerData] = useState(null); // { room, player }
+
+  // Secret route detection for Camilla game
+  if (window.location.pathname === '/who-is-camilla' || window.location.pathname === '/bouvetvalues/who-is-camilla') {
+    return <CamillaGame />;
+  }
 
   const games = [
     {
