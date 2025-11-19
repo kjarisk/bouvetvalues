@@ -66,10 +66,11 @@ function CamillaGame() {
   
   // Item types
   const powerUps = [
-    { name: 'monster', energy: 25, points: 50, image: 'monster-drink.png' },
-    { name: 'hamster', energy: 20, points: 40, image: 'hamster.png' },
-    { name: 'star', energy: 15, points: 30, image: 'cute-star.png' },
-    { name: 'heart', energy: 15, points: 30, image: 'cute-heart.png' }
+    { name: 'monster1', energy: 25, points: 50, image: 'monster1.jpeg' },
+    { name: 'monster2', energy: 25, points: 50, image: 'monster2.jpeg' },
+    { name: 'monster3', energy: 25, points: 50, image: 'monster3.jpeg' },
+    { name: 'hamster1', energy: 20, points: 40, image: 'hamster1.jpeg' },
+    { name: 'hamster2', energy: 20, points: 40, image: 'hamster2.jpeg' }
   ];
   
   const sleepyItems = [
@@ -84,7 +85,11 @@ function CamillaGame() {
     const imagesToLoad = [
       { key: 'player', src: 'camilla.png' },
       { key: 'background', src: 'Camilla_background.jpeg' },
-      ...powerUps.map(item => ({ key: item.name, src: item.image })),
+      { key: 'monster1', src: 'monster1.jpeg' },
+      { key: 'monster2', src: 'monster2.jpeg' },
+      { key: 'monster3', src: 'monster3.jpeg' },
+      { key: 'hamster1', src: 'hamster1.jpeg' },
+      { key: 'hamster2', src: 'hamster2.jpeg' },
       ...sleepyItems.map(item => ({ key: item.name, src: item.image }))
     ];
     
@@ -210,13 +215,48 @@ function CamillaGame() {
         playerPosRef.current.x = Math.min(0.95, playerPosRef.current.x + moveSpeed);
       }
       
-      // Draw player
+      // Draw player with bubble-head circle
       if (imagesRef.current.player) {
         const playerSize = 80;
-        const px = playerPosRef.current.x * canvas.width - playerSize / 2;
-        const py = playerPosRef.current.y * canvas.height - playerSize / 2;
+        const px = playerPosRef.current.x * canvas.width;
+        const py = playerPosRef.current.y * canvas.height;
         
-        ctx.drawImage(imagesRef.current.player, px, py, playerSize, playerSize);
+        // Draw glowing circle border (like Jordnaer game)
+        ctx.save();
+        
+        // Outer glow
+        ctx.shadowColor = 'rgba(255, 230, 109, 0.8)';
+        ctx.shadowBlur = 20;
+        ctx.strokeStyle = '#FFE66D';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(px, py, playerSize / 2, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        // Inner highlight
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 0.3;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.beginPath();
+        ctx.arc(px, py, playerSize / 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        
+        // Clip to circle for image
+        ctx.beginPath();
+        ctx.arc(px, py, (playerSize / 2) - 4, 0, Math.PI * 2);
+        ctx.clip();
+        
+        // Draw player image
+        ctx.drawImage(
+          imagesRef.current.player,
+          px - playerSize / 2,
+          py - playerSize / 2,
+          playerSize,
+          playerSize
+        );
+        
+        ctx.restore();
       }
       
       // Spawn items
@@ -233,7 +273,7 @@ function CamillaGame() {
         // Remove if off screen
         if (item.y > 1.1) return false;
         
-        // Check collision
+        // Check collision (circular hitbox)
         const itemCenterX = item.x;
         const itemCenterY = item.y;
         const playerCenterX = playerPosRef.current.x;
@@ -244,7 +284,8 @@ function CamillaGame() {
           Math.pow((itemCenterY - playerCenterY) * canvas.height, 2)
         );
         
-        if (distance < 50) {
+        // Player radius is 40, item radius is 30, so collision at ~60-70 pixels
+        if (distance < 65) {
           // Collision!
           item.collected = true;
           
