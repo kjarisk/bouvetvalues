@@ -66,18 +66,18 @@ function CamillaGame() {
   
   // Item types
   const powerUps = [
-    { name: 'monster1', energy: 25, points: 50, image: 'monster1.jpeg' },
-    { name: 'monster2', energy: 25, points: 50, image: 'monster2.jpeg' },
-    { name: 'monster3', energy: 25, points: 50, image: 'monster3.jpeg' },
-    { name: 'hamster1', energy: 20, points: 40, image: 'hamster1.jpeg' },
-    { name: 'hamster2', energy: 20, points: 40, image: 'hamster2.jpeg' }
+    { name: 'monster1', energy: 25, points: 50, image: 'monster1.png', size: 90, isMonster: true },
+    { name: 'monster2', energy: 25, points: 50, image: 'monster2.png', size: 90, isMonster: true },
+    { name: 'monster3', energy: 25, points: 50, image: 'monster3.png', size: 90, isMonster: true },
+    { name: 'hamster1', energy: 20, points: 40, image: 'hamster1.png', size: 60, isMonster: false },
+    { name: 'hamster2', energy: 20, points: 40, image: 'hamster2.png', size: 60, isMonster: false }
   ];
   
   const sleepyItems = [
-    { name: 'bed', energy: -20, points: -30, emoji: '🛏️' },
-    { name: 'pillow', energy: -15, points: -20, emoji: '🛌' },
-    { name: 'pills', energy: -15, points: -20, emoji: '💊' },
-    { name: 'zzz', energy: -10, points: -15, emoji: '💤' }
+    { name: 'bed', energy: -20, points: -30, emoji: '🛏️', size: 60, isMonster: false },
+    { name: 'pillow', energy: -15, points: -20, emoji: '🛌', size: 60, isMonster: false },
+    { name: 'pills', energy: -15, points: -20, emoji: '💊', size: 60, isMonster: false },
+    { name: 'zzz', energy: -10, points: -15, emoji: '💤', size: 60, isMonster: false }
   ];
   
   // Preload images
@@ -85,11 +85,11 @@ function CamillaGame() {
     const imagesToLoad = [
       { key: 'player', src: 'camilla.png' },
       { key: 'background', src: 'Camilla_background.jpeg' },
-      { key: 'monster1', src: 'monster1.jpeg' },
-      { key: 'monster2', src: 'monster2.jpeg' },
-      { key: 'monster3', src: 'monster3.jpeg' },
-      { key: 'hamster1', src: 'hamster1.jpeg' },
-      { key: 'hamster2', src: 'hamster2.jpeg' }
+      { key: 'monster1', src: 'monster1.png' },
+      { key: 'monster2', src: 'monster2.png' },
+      { key: 'monster3', src: 'monster3.png' },
+      { key: 'hamster1', src: 'hamster1.png' },
+      { key: 'hamster2', src: 'hamster2.png' }
     ];
     
     let loadedCount = 0;
@@ -185,7 +185,7 @@ function CamillaGame() {
       };
       
       itemsRef.current.push(newItem);
-      console.log('Spawned item:', newItem.type.name || newItem.type.emoji, 'Total items:', itemsRef.current.length);
+      console.log('Spawned item:', newItem.type.name || newItem.type.emoji, 'Size:', newItem.type.size, 'Total items:', itemsRef.current.length);
     };
     
     const updateGame = (timestamp) => {
@@ -277,13 +277,6 @@ function CamillaGame() {
       spawnItem(timestamp);
       
       // Update and draw items
-      const itemSize = 60;
-      
-      // Debug log
-      if (itemsRef.current.length > 0 && Math.random() < 0.01) {
-        console.log('Current items count:', itemsRef.current.length, 'First item Y:', itemsRef.current[0].y);
-      }
-      
       itemsRef.current = itemsRef.current.filter(item => {
         if (item.collected) return false;
         
@@ -304,8 +297,11 @@ function CamillaGame() {
           Math.pow((itemCenterY - playerCenterY) * canvas.height, 2)
         );
         
-        // Player radius is 40, item radius is 30, so collision at ~60-70 pixels
-        if (distance < 65) {
+        // Dynamic collision based on item size
+        const itemRadius = item.type.size / 2;
+        const collisionDistance = 40 + itemRadius; // player radius + item radius
+        
+        if (distance < collisionDistance) {
           // Collision!
           item.collected = true;
           
@@ -313,20 +309,36 @@ function CamillaGame() {
           setScore(s => Math.max(0, s + item.type.points));
           setEnergy(e => Math.min(100, Math.max(0, e + item.type.energy)));
           
-          // Create particles
-          createParticles(item.x * canvas.width, item.y * canvas.height, item.isPowerUp);
+          // Create particles (more for monsters!)
+          const particleCount = item.type.isMonster ? 30 : 15;
+          createParticles(item.x * canvas.width, item.y * canvas.height, item.isPowerUp, particleCount);
           
           return false;
         }
         
         // Draw item
-        const ix = item.x * canvas.width - itemSize / 2;
-        const iy = item.y * canvas.height - itemSize / 2;
-        
+        const itemSize = item.type.size;
         const img = imagesRef.current[item.type.name];
+        
         if (img) {
-          // Draw image if available
-          ctx.drawImage(img, ix, iy, itemSize, itemSize);
+          // Draw image maintaining aspect ratio
+          const imgAspect = img.width / img.height;
+          let drawWidth, drawHeight;
+          
+          if (imgAspect > 1) {
+            // Wider than tall
+            drawWidth = itemSize;
+            drawHeight = itemSize / imgAspect;
+          } else {
+            // Taller than wide
+            drawHeight = itemSize;
+            drawWidth = itemSize * imgAspect;
+          }
+          
+          const ix = item.x * canvas.width - drawWidth / 2;
+          const iy = item.y * canvas.height - drawHeight / 2;
+          
+          ctx.drawImage(img, ix, iy, drawWidth, drawHeight);
         } else if (item.type.emoji) {
           // Draw emoji fallback for items without images
           ctx.save();
@@ -391,20 +403,21 @@ function CamillaGame() {
     };
   }, [gameState, currentLevel, energy]);
   
-  const createParticles = (x, y, isPowerUp) => {
+  const createParticles = (x, y, isPowerUp, count = 15) => {
     const colors = isPowerUp 
-      ? ['#FFD700', '#FFA500', '#FF69B4', '#00FF00'] 
+      ? ['#FFD700', '#FFA500', '#FF69B4', '#00FF00', '#FF1493', '#00FFFF'] 
       : ['#4169E1', '#6A5ACD', '#8B008B', '#483D8B'];
     
-    for (let i = 0; i < 15; i++) {
-      const angle = (Math.PI * 2 * i) / 15;
+    for (let i = 0; i < count; i++) {
+      const angle = (Math.PI * 2 * i) / count;
+      const speed = count > 15 ? 3 : 2; // Faster particles for bigger explosions
       particlesRef.current.push({
         x,
         y,
-        vx: Math.cos(angle) * (2 + Math.random() * 2),
-        vy: Math.sin(angle) * (2 + Math.random() * 2),
+        vx: Math.cos(angle) * (speed + Math.random() * 3),
+        vy: Math.sin(angle) * (speed + Math.random() * 3),
         life: 1,
-        size: 3 + Math.random() * 3,
+        size: count > 15 ? 4 + Math.random() * 4 : 3 + Math.random() * 3, // Bigger particles for monsters
         color: colors[Math.floor(Math.random() * colors.length)]
       });
     }
