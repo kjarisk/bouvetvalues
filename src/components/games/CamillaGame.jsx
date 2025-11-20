@@ -26,40 +26,40 @@ function CamillaGame() {
       name: 'Warm-Up Party',
       description: 'Time to start the party!',
       duration: 30,
-      itemSpeed: 0.75,  // 50% slower
-      spawnRate: 1200,
+      itemSpeed: 0.6,  // 20% slower than before
+      spawnRate: 800,  // More items (was 1200)
       energyDecay: 0.15
     },
     {
       name: 'Getting Pumped',
       description: 'Energy is rising!',
       duration: 35,
-      itemSpeed: 1.0,  // 50% slower
-      spawnRate: 1000,
+      itemSpeed: 0.85,  // Scaled down
+      spawnRate: 700,  // More items (was 1000)
       energyDecay: 0.2
     },
     {
       name: 'Party Mode',
       description: 'This is getting fun!',
       duration: 40,
-      itemSpeed: 1.25,  // 50% slower
-      spawnRate: 850,
+      itemSpeed: 1.1,  // Scaled down
+      spawnRate: 600,  // More items (was 850)
       energyDecay: 0.25
     },
     {
       name: 'All-Nighter',
       description: 'Keep going!',
       duration: 45,
-      itemSpeed: 1.5,  // 50% slower
-      spawnRate: 700,
+      itemSpeed: 1.35,  // Scaled down
+      spawnRate: 500,  // More items (was 700)
       energyDecay: 0.3
     },
     {
       name: 'Legendary',
       description: 'Maximum party mode!',
       duration: 50,
-      itemSpeed: 1.75,  // 50% slower
-      spawnRate: 600,
+      itemSpeed: 1.6,  // Scaled down
+      spawnRate: 450,  // More items (was 600)
       energyDecay: 0.35
     }
   ];
