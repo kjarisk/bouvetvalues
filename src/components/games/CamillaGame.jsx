@@ -26,7 +26,7 @@ function CamillaGame() {
       name: 'Warm-Up Party',
       description: 'Time to start the party!',
       duration: 30,
-      itemSpeed: 1.5,
+      itemSpeed: 0.75,  // 50% slower
       spawnRate: 1200,
       energyDecay: 0.15
     },
@@ -34,7 +34,7 @@ function CamillaGame() {
       name: 'Getting Pumped',
       description: 'Energy is rising!',
       duration: 35,
-      itemSpeed: 2,
+      itemSpeed: 1.0,  // 50% slower
       spawnRate: 1000,
       energyDecay: 0.2
     },
@@ -42,7 +42,7 @@ function CamillaGame() {
       name: 'Party Mode',
       description: 'This is getting fun!',
       duration: 40,
-      itemSpeed: 2.5,
+      itemSpeed: 1.25,  // 50% slower
       spawnRate: 850,
       energyDecay: 0.25
     },
@@ -50,7 +50,7 @@ function CamillaGame() {
       name: 'All-Nighter',
       description: 'Keep going!',
       duration: 45,
-      itemSpeed: 3,
+      itemSpeed: 1.5,  // 50% slower
       spawnRate: 700,
       energyDecay: 0.3
     },
@@ -58,7 +58,7 @@ function CamillaGame() {
       name: 'Legendary',
       description: 'Maximum party mode!',
       duration: 50,
-      itemSpeed: 3.5,
+      itemSpeed: 1.75,  // 50% slower
       spawnRate: 600,
       energyDecay: 0.35
     }
@@ -115,6 +115,7 @@ function CamillaGame() {
     const audio = new Audio(`${import.meta.env.BASE_URL}camilla-music.mp3`);
     audio.loop = true;
     audio.volume = 0.3;
+    audio.playbackRate = 1.0; // Normal speed initially
     audioRef.current = audio;
     
     return () => {
@@ -163,26 +164,28 @@ function CamillaGame() {
     
     const ctx = canvas.getContext('2d');
     const level = levels[currentLevel];
-    let levelStartTime = Date.now();
-    let lastSpawnTime = Date.now();
+    let levelStartTime = performance.now();
+    let lastSpawnTime = 0; // Start at 0 so first item spawns immediately
     
-    const spawnItem = () => {
-      const now = Date.now();
-      if (now - lastSpawnTime < level.spawnRate) return;
+    const spawnItem = (currentTime) => {
+      if (currentTime - lastSpawnTime < level.spawnRate) return;
       
-      lastSpawnTime = now;
+      lastSpawnTime = currentTime;
       const isPowerUp = Math.random() < 0.5;
       const itemList = isPowerUp ? powerUps : sleepyItems;
       const itemType = itemList[Math.floor(Math.random() * itemList.length)];
       
-      itemsRef.current.push({
-        id: now + Math.random(),
+      const newItem = {
+        id: currentTime + Math.random(),
         type: itemType,
         x: Math.random() * 0.85 + 0.075, // 0.075 to 0.925
         y: -0.1,
         isPowerUp,
         collected: false
-      });
+      };
+      
+      itemsRef.current.push(newItem);
+      console.log('Spawned item:', newItem.type.name || newItem.type.emoji, 'Total items:', itemsRef.current.length);
     };
     
     const updateGame = (timestamp) => {
@@ -271,10 +274,16 @@ function CamillaGame() {
       }
       
       // Spawn items
-      spawnItem();
+      spawnItem(timestamp);
       
       // Update and draw items
       const itemSize = 60;
+      
+      // Debug log
+      if (itemsRef.current.length > 0 && Math.random() < 0.01) {
+        console.log('Current items count:', itemsRef.current.length, 'First item Y:', itemsRef.current[0].y);
+      }
+      
       itemsRef.current = itemsRef.current.filter(item => {
         if (item.collected) return false;
         
@@ -357,7 +366,7 @@ function CamillaGame() {
       }
       
       // Check level completion
-      const levelTime = (Date.now() - levelStartTime) / 1000;
+      const levelTime = (timestamp - levelStartTime) / 1000;
       if (levelTime >= level.duration) {
         setGameState('levelComplete');
         return;
@@ -402,6 +411,7 @@ function CamillaGame() {
   };
   
   const startGame = () => {
+    console.log('Starting Camilla game!');
     setGameState('playing');
     setScore(0);
     setCurrentLevel(0);
@@ -410,19 +420,30 @@ function CamillaGame() {
     itemsRef.current = [];
     particlesRef.current = [];
     
+    console.log('Power-ups:', powerUps);
+    console.log('Sleepy items:', sleepyItems);
+    
     if (audioRef.current && !isMuted) {
+      audioRef.current.playbackRate = 1.0; // Reset to normal speed at start
       audioRef.current.play().catch(e => console.log('Audio play failed:', e));
     }
   };
   
   const nextLevel = () => {
     if (currentLevel < levels.length - 1) {
-      setCurrentLevel(c => c + 1);
+      const newLevel = currentLevel + 1;
+      setCurrentLevel(newLevel);
       setGameState('playing');
       // Bonus points for completing level
       setScore(s => s + 500);
       // Restore some energy
       setEnergy(e => Math.min(100, e + 30));
+      
+      // Speed up music: (level + 1) * 10% faster
+      if (audioRef.current) {
+        audioRef.current.playbackRate = 1.0 + ((newLevel + 1) * 0.1);
+        console.log('Music speed:', audioRef.current.playbackRate);
+      }
     } else {
       setGameState('victory');
     }
@@ -433,6 +454,7 @@ function CamillaGame() {
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
+      audioRef.current.playbackRate = 1.0; // Reset speed
     }
   };
   
