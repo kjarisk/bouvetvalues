@@ -74,10 +74,10 @@ function CamillaGame() {
   ];
   
   const sleepyItems = [
-    { name: 'bed', energy: -20, points: -30, image: 'sleep-bed.png' },
-    { name: 'pillow', energy: -15, points: -20, image: 'sleep-pillow.png' },
-    { name: 'pills', energy: -15, points: -20, image: 'sleep-pills.png' },
-    { name: 'zzz', energy: -10, points: -15, image: 'sleep-zzz.png' }
+    { name: 'bed', energy: -20, points: -30, emoji: '🛏️' },
+    { name: 'pillow', energy: -15, points: -20, emoji: '🛌' },
+    { name: 'pills', energy: -15, points: -20, emoji: '💊' },
+    { name: 'zzz', energy: -10, points: -15, emoji: '💤' }
   ];
   
   // Preload images
@@ -89,8 +89,7 @@ function CamillaGame() {
       { key: 'monster2', src: 'monster2.jpeg' },
       { key: 'monster3', src: 'monster3.jpeg' },
       { key: 'hamster1', src: 'hamster1.jpeg' },
-      { key: 'hamster2', src: 'hamster2.jpeg' },
-      ...sleepyItems.map(item => ({ key: item.name, src: item.image }))
+      { key: 'hamster2', src: 'hamster2.jpeg' }
     ];
     
     let loadedCount = 0;
@@ -196,13 +195,25 @@ function CamillaGame() {
       lastUpdateTime.current = timestamp;
       const deltaSeconds = deltaTime / 1000;
       
-      // Clear canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // Clear canvas and draw gradient background
+      ctx.fillStyle = 'linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)';
+      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      gradient.addColorStop(0, '#1a1a2e');
+      gradient.addColorStop(0.5, '#16213e');
+      gradient.addColorStop(1, '#0f3460');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
       
-      // Draw faded background
+      // Draw background image centered without stretching
       if (imagesRef.current.background) {
-        ctx.globalAlpha = 0.2;
-        ctx.drawImage(imagesRef.current.background, 0, 0, canvas.width, canvas.height);
+        ctx.globalAlpha = 0.25;
+        const bgImg = imagesRef.current.background;
+        const scale = Math.min(canvas.width / bgImg.width, canvas.height / bgImg.height) * 0.8;
+        const bgWidth = bgImg.width * scale;
+        const bgHeight = bgImg.height * scale;
+        const bgX = (canvas.width - bgWidth) / 2;
+        const bgY = (canvas.height - bgHeight) / 2;
+        ctx.drawImage(bgImg, bgX, bgY, bgWidth, bgHeight);
         ctx.globalAlpha = 1;
       }
       
@@ -300,11 +311,21 @@ function CamillaGame() {
         }
         
         // Draw item
+        const ix = item.x * canvas.width - itemSize / 2;
+        const iy = item.y * canvas.height - itemSize / 2;
+        
         const img = imagesRef.current[item.type.name];
         if (img) {
-          const ix = item.x * canvas.width - itemSize / 2;
-          const iy = item.y * canvas.height - itemSize / 2;
+          // Draw image if available
           ctx.drawImage(img, ix, iy, itemSize, itemSize);
+        } else if (item.type.emoji) {
+          // Draw emoji fallback for items without images
+          ctx.save();
+          ctx.font = `${itemSize}px Arial`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(item.type.emoji, item.x * canvas.width, item.y * canvas.height);
+          ctx.restore();
         }
         
         return true;
