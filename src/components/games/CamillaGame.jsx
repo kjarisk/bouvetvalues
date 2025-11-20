@@ -8,6 +8,7 @@ function CamillaGame() {
   const [currentLevel, setCurrentLevel] = useState(0);
   const [energy, setEnergy] = useState(100);
   const [isMuted, setIsMuted] = useState(false);
+  const [showLevelUp, setShowLevelUp] = useState(false);
   
   // Game refs
   const gameLoopRef = useRef(null);
@@ -20,46 +21,46 @@ function CamillaGame() {
   const audioRef = useRef(null);
   const energyDecayTimer = useRef(0);
   
-  // Level configurations
+  // Level configurations (score-based progression: 300 points per level)
   const levels = [
     {
       name: 'Warm-Up Party',
       description: 'Time to start the party!',
-      duration: 30,
-      itemSpeed: 0.6,  // 20% slower than before
-      spawnRate: 800,  // More items (was 1200)
+      scoreThreshold: 0,
+      itemSpeed: 0.6,
+      spawnRate: 800,
       energyDecay: 0.15
     },
     {
       name: 'Getting Pumped',
       description: 'Energy is rising!',
-      duration: 35,
-      itemSpeed: 0.85,  // Scaled down
-      spawnRate: 700,  // More items (was 1000)
+      scoreThreshold: 300,
+      itemSpeed: 0.85,
+      spawnRate: 700,
       energyDecay: 0.2
     },
     {
       name: 'Party Mode',
       description: 'This is getting fun!',
-      duration: 40,
-      itemSpeed: 1.1,  // Scaled down
-      spawnRate: 600,  // More items (was 850)
+      scoreThreshold: 600,
+      itemSpeed: 1.1,
+      spawnRate: 600,
       energyDecay: 0.25
     },
     {
       name: 'All-Nighter',
       description: 'Keep going!',
-      duration: 45,
-      itemSpeed: 1.35,  // Scaled down
-      spawnRate: 500,  // More items (was 700)
+      scoreThreshold: 900,
+      itemSpeed: 1.35,
+      spawnRate: 500,
       energyDecay: 0.3
     },
     {
       name: 'Legendary',
       description: 'Maximum party mode!',
-      duration: 50,
-      itemSpeed: 1.6,  // Scaled down
-      spawnRate: 450,  // More items (was 600)
+      scoreThreshold: 1200,
+      itemSpeed: 1.6,
+      spawnRate: 450,
       energyDecay: 0.35
     }
   ];
@@ -155,6 +156,32 @@ function CamillaGame() {
     };
   }, []);
   
+  // Check for level up based on score
+  useEffect(() => {
+    if (gameState !== 'playing') return;
+    
+    // Check if we should level up
+    const nextLevelIndex = currentLevel + 1;
+    if (nextLevelIndex < levels.length && score >= levels[nextLevelIndex].scoreThreshold) {
+      // Level up!
+      setCurrentLevel(nextLevelIndex);
+      setShowLevelUp(true);
+      
+      // Speed up music
+      if (audioRef.current) {
+        audioRef.current.playbackRate = 1.0 + ((nextLevelIndex + 1) * 0.1);
+      }
+      
+      // Restore some energy as bonus
+      setEnergy(e => Math.min(100, e + 25));
+      
+      // Hide level up message after 2.5 seconds
+      setTimeout(() => {
+        setShowLevelUp(false);
+      }, 2500);
+    }
+  }, [score, currentLevel, gameState]);
+  
   // Main game loop
   useEffect(() => {
     if (gameState !== 'playing') return;
@@ -164,7 +191,6 @@ function CamillaGame() {
     
     const ctx = canvas.getContext('2d');
     const level = levels[currentLevel];
-    let levelStartTime = performance.now();
     let lastSpawnTime = 0; // Start at 0 so first item spawns immediately
     
     const spawnItem = (currentTime) => {
@@ -377,16 +403,15 @@ function CamillaGame() {
         setEnergy(e => Math.max(0, e - level.energyDecay));
       }
       
-      // Check level completion
-      const levelTime = (timestamp - levelStartTime) / 1000;
-      if (levelTime >= level.duration) {
-        setGameState('levelComplete');
+      // Check game over (no more time-based level completion)
+      if (energy <= 0) {
+        setGameState('gameOver');
         return;
       }
       
-      // Check game over
-      if (energy <= 0) {
-        setGameState('gameOver');
+      // Check victory (completed all levels)
+      if (currentLevel >= levels.length - 1 && score >= 1500) {
+        setGameState('victory');
         return;
       }
       
@@ -442,25 +467,7 @@ function CamillaGame() {
     }
   };
   
-  const nextLevel = () => {
-    if (currentLevel < levels.length - 1) {
-      const newLevel = currentLevel + 1;
-      setCurrentLevel(newLevel);
-      setGameState('playing');
-      // Bonus points for completing level
-      setScore(s => s + 500);
-      // Restore some energy
-      setEnergy(e => Math.min(100, e + 30));
-      
-      // Speed up music: (level + 1) * 10% faster
-      if (audioRef.current) {
-        audioRef.current.playbackRate = 1.0 + ((newLevel + 1) * 0.1);
-        console.log('Music speed:', audioRef.current.playbackRate);
-      }
-    } else {
-      setGameState('victory');
-    }
-  };
+  // Removed nextLevel function - level progression is automatic based on score
   
   const restartGame = () => {
     setGameState('intro');
@@ -502,6 +509,12 @@ function CamillaGame() {
             <span className="hud-label">Level:</span>
             <span className="hud-value">{currentLevel + 1} / {levels.length}</span>
           </div>
+          <div className="hud-item">
+            <span className="hud-label">Next Level:</span>
+            <span className="hud-value">
+              {currentLevel < levels.length - 1 ? levels[currentLevel + 1].scoreThreshold : 'MAX'}
+            </span>
+          </div>
           <div className="hud-item energy-bar-container">
             <span className="hud-label">Energy:</span>
             <div className="energy-bar">
@@ -518,6 +531,19 @@ function CamillaGame() {
           <button className="mute-btn" onClick={() => setIsMuted(!isMuted)}>
             {isMuted ? '🔇' : '🔊'}
           </button>
+        </div>
+      )}
+      
+      {/* Level Up Flare */}
+      {showLevelUp && (
+        <div className="level-up-flare">
+          <div className="level-up-content">
+            <div className="level-up-flash"></div>
+            <h1 className="level-up-title">🎉 LEVEL UP! 🎉</h1>
+            <h2 className="level-up-name">{levels[currentLevel].name}</h2>
+            <p className="level-up-description">{levels[currentLevel].description}</p>
+            <div className="level-up-bonus">+25 Energy Bonus!</div>
+          </div>
         </div>
       )}
       
@@ -539,40 +565,14 @@ function CamillaGame() {
                   <span>Avoid beds, pillows & sleepy stuff!</span>
                 </div>
               </div>
+              <p style={{color: '#FFD700', fontSize: '1.1rem', margin: '15px 0'}}>
+                ⭐ Reach 300 points to level up! ⭐
+              </p>
               <p className="controls-hint">Use ← → or A D to move</p>
             </div>
             <button className="game-btn game-btn-primary" onClick={startGame}>
               🚀 Let's Party!
             </button>
-          </div>
-        </div>
-      )}
-      
-      {/* Level Complete */}
-      {gameState === 'levelComplete' && (
-        <div className="game-overlay">
-          <div className="overlay-content">
-            <h2 className="level-title">🎊 Level Complete!</h2>
-            <p className="level-subtitle">{levels[currentLevel].name}</p>
-            <div className="level-stats">
-              <div className="stat">Score: {score}</div>
-              <div className="stat">Energy: {Math.floor(energy)}%</div>
-              <div className="stat">Bonus: +500 points!</div>
-            </div>
-            {currentLevel < levels.length - 1 ? (
-              <>
-                <p className="next-level-info">
-                  Next: {levels[currentLevel + 1].name}
-                </p>
-                <button className="game-btn game-btn-primary" onClick={nextLevel}>
-                  🎯 Continue Party!
-                </button>
-              </>
-            ) : (
-              <button className="game-btn game-btn-primary" onClick={nextLevel}>
-                🏆 Final Level!
-              </button>
-            )}
           </div>
         </div>
       )}
